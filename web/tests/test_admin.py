@@ -8,7 +8,7 @@ from web.admin import AdminAuthError, AdminService
 
 
 def test_admin_login_create_and_revoke(admin_service: AdminService) -> None:
-    token, csrf = admin_service.login("admin-test-password")
+    token, csrf = admin_service.login("admin", "admin-test-password")
     assert csrf
     session = admin_service.me(token)
     assert session is not None
@@ -29,7 +29,12 @@ def test_admin_login_create_and_revoke(admin_service: AdminService) -> None:
 
 def test_admin_wrong_password(admin_service: AdminService) -> None:
     with pytest.raises(AdminAuthError):
-        admin_service.login("wrong-password")
+        admin_service.login("admin", "wrong-password")
+
+
+def test_admin_wrong_username(admin_service: AdminService) -> None:
+    with pytest.raises(AdminAuthError):
+        admin_service.login("root", "admin-test-password")
 
 
 def test_admin_disabled_without_hash(admin_service: AdminService) -> None:
@@ -38,7 +43,7 @@ def test_admin_disabled_without_hash(admin_service: AdminService) -> None:
         replace(admin_service.settings, admin_password_hash=""),
     )
     with pytest.raises(AdminAuthError):
-        disabled.login("anything")
+        disabled.login("admin", "anything")
 
 
 def test_admin_rejects_bad_invite_limits(admin_service: AdminService) -> None:
@@ -47,7 +52,7 @@ def test_admin_rejects_bad_invite_limits(admin_service: AdminService) -> None:
 
 
 def test_admin_can_change_password(admin_service: AdminService) -> None:
-    admin_service.login("admin-test-password")
+    admin_service.login("admin", "admin-test-password")
     token, csrf = admin_service.change_password(
         "admin-test-password",
         "new-admin-password",
@@ -55,8 +60,8 @@ def test_admin_can_change_password(admin_service: AdminService) -> None:
     assert csrf
     assert admin_service.me(token) is not None
     with pytest.raises(AdminAuthError):
-        admin_service.login("admin-test-password")
-    assert admin_service.login("new-admin-password")[0]
+        admin_service.login("admin", "admin-test-password")
+    assert admin_service.login("admin", "new-admin-password")[0]
 
 
 def test_admin_lists_and_resets_accounts(admin_service: AdminService) -> None:

@@ -71,6 +71,7 @@ class AdminPasswordBody(BaseModel):
 
 
 class AdminLoginBody(BaseModel):
+    username: str = "admin"
     password: str = ""
 
 
@@ -362,9 +363,12 @@ def build_router(
         require_https(request, settings)
         limiter.check(_client_key(request, "admin-login"))
         try:
-            token, csrf = admin.login(body.password)
+            token, csrf = admin.login(body.username, body.password)
         except AdminAuthError as exc:
-            raise HTTPException(status_code=401, detail="Clave de administrador incorrecta.") from exc
+            raise HTTPException(
+                status_code=401,
+                detail="Usuario o clave de administrador incorrectos.",
+            ) from exc
         response = JSONResponse({"authenticated": True, "csrfToken": csrf})
         response.set_cookie(
             ADMIN_COOKIE,

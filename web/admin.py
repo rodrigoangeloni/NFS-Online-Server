@@ -51,7 +51,12 @@ class AdminService:
             return configured
         return ""
 
-    def login(self, password: str) -> tuple[str, str]:
+    def login(self, username: str, password: str) -> tuple[str, str]:
+        expected = str(self.settings.admin_username or "admin").strip().casefold()
+        supplied = str(username or "").strip().casefold()
+        if not expected or supplied != expected:
+            self.web_db.audit("admin", "admin.login_failed", {"reason": "bad_username"})
+            raise AdminAuthError("bad_username")
         encoded = self._current_password_hash()
         if not encoded:
             raise AdminAuthError("admin_disabled")

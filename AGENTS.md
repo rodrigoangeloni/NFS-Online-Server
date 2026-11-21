@@ -234,8 +234,8 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   `20000-20005`; `8096` queda en loopback.
 - TCP de juego verificados desde Internet; falta la prueba de carrera
   externa para confirmar UDP.
-- Panel admin: `https://nfs-fps.duckdns.org/admin`; la clave se guarda
-  hasheada en `NFS_WEB_ADMIN_PASSWORD_HASH` dentro de
+- Panel admin: `https://nfs-fps.duckdns.org/admin`; usuario `admin` y
+  clave hasheada en `NFS_WEB_ADMIN_PASSWORD_HASH` dentro de
   `/opt/nfs-online/env/web.env` (solo como semilla) y luego en SQLite.
 - Invitaciones: el panel lista el código, usos, vencimiento y estado;
   permite crear y revocar. El código se guarda en la SQLite para poder

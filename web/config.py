@@ -32,6 +32,7 @@ class WebSettings:
     public_host: str
     site_url: str
     games: tuple[str, ...]
+    admin_username: str
     admin_password_hash: str
     session_seconds: int
     invite_required: bool
@@ -105,6 +106,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> WebSettings:
         public_host=public_host,
         site_url=_env(env, "NFS_WEB_SITE_URL") or f"http://{public_host}:8096",
         games=games,
+        admin_username=_env(env, "NFS_WEB_ADMIN_USERNAME", "admin") or "admin",
         admin_password_hash=_env(env, "NFS_WEB_ADMIN_PASSWORD_HASH"),
         session_seconds=session_seconds,
         invite_required=_env_bool(env, "NFS_WEB_INVITE_REQUIRED", True),

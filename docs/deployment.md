@@ -88,10 +88,12 @@ NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org
 NFS_WEB_DOWNLOADS_DIR=/opt/nfs-online/artifacts/downloads
 NFS_WEB_INVITE_REQUIRED=1
 NFS_WEB_EMAIL_REQUIRED=1
+NFS_WEB_ADMIN_USERNAME=admin
 NFS_WEB_ADMIN_PASSWORD_HASH=pbkdf2_sha256$...
 ```
 
-El panel queda en `https://nfs-fps.duckdns.org/admin`. Ahí se ven,
+El panel queda en `https://nfs-fps.duckdns.org/admin`. El usuario por
+defecto es `admin`; la clave es la que generaste. Ahí se ven,
 crean y revocan invitaciones, se listan cuentas y se puede resetear
 la contraseña de un jugador. El código de invitación se guarda en la
 SQLite para poder consultarlo después.

@@ -295,7 +295,10 @@ function wireLogin() {
     try {
       const payload = await api("/api/admin/login", {
         method: "POST",
-        body: { password: $("adminPassword").value },
+        body: {
+          username: $("adminUsername").value.trim(),
+          password: $("adminPassword").value,
+        },
       });
       csrfToken = payload.csrfToken;
       form.reset();

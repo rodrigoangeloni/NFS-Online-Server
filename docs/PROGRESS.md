@@ -349,7 +349,8 @@ Se agregó seguridad de cuentas sin depender de un servidor de correo.
   las cuentas viejas pueden cargarlo desde `/account` con su contraseña.
 - **Cambio de contraseña de usuario** en `/account` (actual + nueva).
 - **Cambio de clave de administrador** en `/admin`; el hash queda en
-  SQLite y el de `web.env` solo se usa como semilla inicial.
+  SQLite y el de `web.env` solo se usa como semilla inicial. El login
+  pide usuario (`admin` por defecto) y clave.
 - **Código de recuperación** `NFS-REC-XXXX-XXXX` generado al registrarse
   y visible una vez; se puede regenerar desde la cuenta.
 - **Olvidé mi contraseña**: cuenta + email + código de recuperación

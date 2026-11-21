@@ -38,12 +38,17 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] El árbol commiteado pasa `tools/check_public_tree.py`.
 - [x] Login real de **MW** verificado: `auth result=ok`, persona `TestDriver`, Messenger autenticado y sala creada.
 - [x] Login real de **U2** verificado: `auth result=ok`, `pers result=ok`, Messenger `underground2-classic-messenger` y sala `017.TestDriver` creada.
-- [x] `runtime/classic-status.json` publica la sala de U2 (`players=1`, `capacity=6`, `state=OPEN`).
+- [x] `runtime/classic-status.json` publicó salas de U2 (`players=1`, `capacity=6`, `state=OPEN`).
 - [x] Widescreen Fix instalado en U2/MW (solo `scripts/`; el `dinput8.dll` actual no se tocó).
 - [x] U2 probado en ventana 1920x1080 (`WindowedMode=3`) y con resolución DSR 2560x1440.
-- [ ] Login online después del Widescreen Fix, prueba en MW y DSR en fullscreen.
+- [x] Login online de U2 verificado después del fix, con `WindowedMode=1` borderless y sala `034.TestDriver`.
+- [x] MVP de `web/`: registro, login, sesiones, descargas, landing y página de cuenta.
+- [x] Paquetes de cliente U2/MW generados con el fix borderless e instalador para no técnicos.
+- [x] Web levantada en LAN (`http://192.0.2.37:8081`) dentro de Docker.
+- [ ] Probar registro, descarga e instalación desde la otra PC de la LAN.
+- [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
 - [ ] Probar la sala con un segundo jugador/cuenta.
-- [ ] Implementación de `web/` (registro, landing, leaderboards, admin).
+- [ ] Completar web: estado en vivo completo, leaderboards, noticias/TOS y admin.
 - [ ] Despliegue en Debian + NPM + DuckDNS.
 - [ ] Fase 1b: Carbon.
 
@@ -64,7 +69,8 @@ E:\vscode-workspace\NFS-Online-Artifacts\
   staging\MW\                         # dinput8.dll + net_mw.asi/.ini
   install-clients.ps1
   install-log.txt
-  downloads\                          # aquí irán los ZIP finales
+  downloads\                          # ZIPs finales + manifest.json
+  vendor\widescreen-fixes\            # releases U2/MW
 ```
 
 Hashes verificados:
@@ -167,11 +173,45 @@ Reglas:
 - Instalado en `scripts/` de cada juego; solo se copiaron `.asi`, `.ini` y `.dat`/`.tpk`.
 - **No** se reemplazó el `dinput8.dll` actual.
 - U2 `NFSUnderground2.WidescreenFix.ini`: `WindowedMode = 1`, `SkipIntro = 1`, `NoOpticalDriveFix = 1`.
-- MW `NFSMostWanted.WidescreenFix.ini`: `WindowedMode = 3`, `SkipIntro = 1`.
+- MW `NFSMostWanted.WidescreenFix.ini`: `WindowedMode = 1`, `SkipIntro = 1`.
 - Resultado U2: `WindowedMode = 1` abre borderless 1920x1080 en (0,0) y tapa la barra de tareas; la lista de resolución incluye 2560x1440 (DSR) y se aplicó.
 - `Win+Shift+Left/Right` no mueve la ventana borderless porque el juego captura la tecla Windows; `WindowedMode = 3` sí se puede arrastrar pero muestra borde y barra de tareas.
 - Para multi-monitor: `WindowedMode = 3`; para DSR: `WindowedMode = 0` + resolución DSR.
 - Detalle y fuentes: `docs/research/2026-11-21-nfs-widescreen-dsr.md`.
+
+## Web local (`web/`)
+
+- MVP en la rama `feat/web-mvp`: FastAPI + SQLite compartida.
+- Módulos: `web/config.py`, `web/db.py`, `web/accounts.py`, `web/downloads.py`,
+  `web/api.py`, `web/security.py`, `web/app.py`.
+- Frontend: `web/static/index.html`, `account.html`, `styles.css`, `app.js`,
+  `account.js`.
+- Prueba completa: `python -m pytest web/tests tests/test_package_clients.py -q`
+  → 34 passed.
+- Correr en Docker (recomendado):
+
+```powershell
+$env:NFS_PUBLIC_HOST = "192.0.2.37"
+$env:NFS_LOCAL_IPV4 = "192.0.2.37"
+$env:NFS_WEB_PUBLIC_HOST = "192.0.2.37"
+$env:NFS_WEB_SITE_URL = "http://192.0.2.37:8081"
+$env:NFS_WEB_INVITE_REQUIRED = "0"
+$env:NFS_DOWNLOADS_DIR = "E:/vscode-workspace/NFS-Online-Artifacts/downloads"
+docker compose -f docker/compose.dev.yml up -d --build nfs-web
+```
+
+- URL LAN: `http://192.0.2.37:8081`.
+- **No** correr `uvicorn` en Windows contra la SQLite viva mientras el
+  contenedor del juego la usa: produce `sqlite3.OperationalError: disk I/O error`.
+  La web debe correr en Docker con el mismo bind mount `../data`.
+- El puerto **8080** está ocupado por `sbrw-core`; NFS usa **8081**.
+- Registro abierto en la prueba LAN (`NFS_WEB_INVITE_REQUIRED=0`). Para
+  invitaciones: `python tools/create_invite.py --uses 5 --days 7`.
+- Paquetes: `python tools/package_clients.py --host 192.0.2.37 ...`; salen en
+  `E:\vscode-workspace\NFS-Online-Artifacts\downloads\` con `manifest.json`.
+- El pack incluye `INSTALAR.bat`, `install.ps1`, `LEEME.txt`, `DESINSTALAR.bat`,
+  licencias, loader y Widescreen Fix en `WindowedMode = 1`.
+- Detalle: `docs/local-testing.md`.
 
 ## Automatización del juego en Windows
 
@@ -195,10 +235,14 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 - El servidor lanzado con `start --daemon` en Windows no sobrevive al cierre del comando; por eso se usa Docker Desktop.
 - Los juegos son repacks de ElAmigos. Si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir. Si el cliente no engancha, probar con un ejecutable original 1.2/1.3.
 - Docker Desktop no reproduce exactamente el host networking de Linux; la validación final es en el Debian.
+- La web NFS corre en Docker y comparte `data/accounts.sqlite3` con el servidor. No ejecutar `uvicorn` en Windows contra esa base mientras el contenedor está activo: aparecen `disk I/O error`.
+- El puerto `8080` de esta PC lo ocupa `sbrw-core`; la web NFS usa `8081`.
+- Para LAN, el servidor debe arrancar con `NFS_PUBLIC_HOST=192.0.2.37` y `NFS_LOCAL_IPV4=192.0.2.37`; si no, anuncia `127.0.0.1` y el cliente remoto no encuentra el lobby.
 
 ## Próximo paso
 
 1. [x] Login de MW con `TestDriver`: `auth result=ok`, persona y Messenger autenticados, sala creada.
 2. [x] Login de U2 con `TestDriver`: `auth result=ok`, `pers result=ok`, Messenger y sala `017.TestDriver`.
-3. [ ] Probar la sala con un segundo jugador/cuenta.
-4. [ ] Implementar `web/` siguiendo el plan.
+3. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8081`, crear cuenta, descargar el pack e instalarlo.
+4. [ ] Probar la sala con el segundo jugador y confirmar que el servidor anuncia `192.0.2.37`.
+5. [ ] Completar la web (leaderboards, noticias/TOS, admin) y desplegar en el Debian.

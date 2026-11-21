@@ -119,7 +119,7 @@ La web tipo brake.go.ro es la capa de comunidad y soporte; el servidor de juego 
 ### 5.2 Forma de despliegue elegida
 
 - **Servidor de juego:** nativo, bajo `systemd`, con el launcher existente (`nfs_online.py start --daemon`). Es la opción más directa para UDP y para los procesos Classic/Carbon/Messenger.
-- **Web:** contenedor Docker con FastAPI/Uvicorn, escuchando en `127.0.0.1:8080` o en una red Docker interna.
+- **Web:** contenedor Docker con FastAPI/Uvicorn, escuchando en `127.0.0.1:8096` o en una red Docker interna.
 - **Proxy TLS:** Nginx Proxy Manager, que ya está instalado. Un Proxy Host para `nfs-fps.duckdns.org` hacia la web.
 - **Datos compartidos:** bind mount del repositorio y de `data/`, `runtime/`, `artifacts/downloads/` y `config/`.
 - **Sin** Docker socket, **sin** exponer SQLite y **sin** publicar el puerto de la web a Internet.
@@ -131,7 +131,7 @@ Amigos
   │  HTTPS 443
   ▼
 Nginx Proxy Manager
-  │  HTTP 8080 (red interna / loopback)
+  │  HTTP 8096 (red interna / loopback)
   ▼
 nfs-web (FastAPI)
   ├─ SQLite compartida: data/accounts.sqlite3
@@ -154,7 +154,7 @@ nfs-server (nativo, systemd)
 
 | Servicio | Protocolo | Puerto |
 |---|---|---:|
-| Web (detrás de NPM) | TCP | 8080 interno |
+| Web (detrás de NPM) | TCP | 8096 interno |
 | Messenger compartido | TCP | 13505 |
 | U2 bootstrap | TCP | 20921 |
 | U2 lobby | TCP | 20922 |
@@ -168,7 +168,7 @@ nfs-server (nativo, systemd)
 | Carbon Massive Ads | TCP | 9000 (Fase 1b) |
 | DLC store (opcional) | TCP loopback | 8081 |
 
-Solo se abren los puertos de los juegos habilitados. El 8080 de la web no se publica.
+Solo se abren los puertos de los juegos habilitados. El 8096 de la web no se publica.
 
 ### 6.2 Componentes
 
@@ -439,7 +439,7 @@ Watchdog `nfs-watchdog.timer` cada 5 minutos:
 `docker/compose.web.yml`:
 
 - `nfs-web`
-- `ports: ["127.0.0.1:8080:8080"]`
+- `ports: ["127.0.0.1:8096:8080"]`
 - Volúmenes:
   - `../data:/app/data`
   - `../runtime:/app/runtime:ro`
@@ -460,16 +460,16 @@ Watchdog `nfs-watchdog.timer` cada 5 minutos:
 
 ### 11.5 NPM
 
-- Proxy Host `nfs-fps.duckdns.org` → `http://127.0.0.1:8080`.
+- Proxy Host `nfs-fps.duckdns.org` → `http://127.0.0.1:8096`.
 - SSL Let's Encrypt, Force SSL, HTTP/2, HSTS opcional.
 - Access List solo para `/admin` si se desea una capa extra.
-- No se publica el 8080.
+- No se publica el 8096.
 
 ### 11.6 Firewall
 
 - `ufw allow 80/tcp`, `443/tcp`.
 - Puertos de juego según los juegos habilitados.
-- `ufw` no debe exponer 8080, 8081, 13506 ni la SQLite.
+- `ufw` no debe exponer 8096, 8081, 13506 ni la SQLite.
 
 ### 11.7 Backups
 
@@ -483,7 +483,7 @@ Docker Desktop en Windows permite probar el stack antes de desplegar en Debian.
 
 - `docker/compose.dev.yml` levanta dos servicios:
   - `nfs-server`: imagen Linux con el repo montado, `--games u2,mw`, puertos TCP `13505/20921/20922/20923/30920/30921` y UDP `20000`.
-  - `nfs-web`: FastAPI en `http://localhost:8080`, con `NFS_WEB_ALLOW_INSECURE=1` para pruebas locales.
+  - `nfs-web`: FastAPI en `http://localhost:8096`, con `NFS_WEB_ALLOW_INSECURE=1` para pruebas locales.
 - Bind mounts `./data`, `./runtime` y `./artifacts/downloads` compartidos entre ambos contenedores (runtime y descargas montados read-only en la web), para poder inspeccionar la SQLite y generar los ZIP desde el host. Si SQLite WAL da problemas de locking en Windows, cambiar a volúmenes nombrados.
 - En dev, ambos contenedores usan el mismo UID (o root) para que `data/` sea escribible; en producción la web usa el UID del usuario `nfs`.
 - Para probar en el mismo PC: `NFS_PUBLIC_HOST=127.0.0.1` y `NFS_LOCAL_IPV4=127.0.0.1`.

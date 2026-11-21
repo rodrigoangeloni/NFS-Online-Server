@@ -1,7 +1,7 @@
 # Progreso — NFS Online autoalojado
 
 **Fecha:** 2026-11-21
-**Rama:** `main`
+**Rama:** `feat/web-mvp` (desde `main`, commits sin pushear)
 **Objetivo:** servidor U2/MW en Debian + web comunitaria propia (FastAPI) + clientes preconfigurados.
 
 ## Resumen de estado
@@ -15,7 +15,7 @@
 | Servidor local | Corriendo en Docker Desktop (`nfs-server-dev`) |
 | Clientes | Compilados y copiados a las carpetas de U2/MW |
 | Login real | MW y U2 verificados (auth, persona, Messenger y sala) |
-| Web `web/` | Pendiente de implementar |
+| Web `web/` | MVP implementado en `feat/web-mvp`: registro, login, sesiones, descargas y landing |
 | Debian/NPM/DuckDNS | Pendiente de desplegar |
 
 ## Protocolo de trabajo
@@ -162,16 +162,143 @@ Get-ChildItem 'C:\Program Files (x86)\Need for Speed Underground 2\MOVIES' -Filt
 
 Este documento y `AGENTS.md` forman parte de este mismo commit.
 
+## Hito: web MVP, descargas y prueba LAN (2026-11-21)
+
+Se implementó el corte vertical mínimo para que un amigo pueda crear cuenta y
+descargar el cliente desde otra PC de la LAN.
+
+### Backend
+
+- `web/config.py`: settings desde `config/server.toml` + overrides de entorno.
+- `web/db.py`: sesiones hasheadas, CSRF, preferencias, invitaciones, auditoría y
+  cola `web_social_events` compatible con el servidor.
+- `web/accounts.py`: registro con invitación opcional, login, logout y
+  preferencias; usa `SQLiteAccountDatabase`.
+- `web/downloads.py`: manifest seguro, `available` recalculado y `/downloads/{id}`.
+- `web/api.py` + `web/security.py`: API JSON, CSRF, HTTPS configurable y rate
+  limit de login.
+- `web/app.py`: landing y página de cuenta.
+
+### Frontend
+
+- `web/static/index.html`, `account.html`, `styles.css`, `app.js`, `account.js`.
+- Diseño dark street-racing, responsive, sin imágenes externas.
+- Polling de estado cada 10 s y descargas desde `/api/connect`.
+
+### Paquetes de cliente
+
+- `tools/package_clients.py` construye:
+  - `NFS-Online-Client-Pack-v0.2.22.zip` (U2 + MW, 10.7 MB).
+  - `NFS-Online-U2-Client-v0.2.22.zip` (5.8 MB).
+  - `NFS-Online-MW-Client-v0.2.22.zip` (5.9 MB).
+  - `manifest.json` con SHA-256.
+- Incluye `dinput8.dll` verificado, `net_*.asi`, `net_*.ini` con
+  `host = 192.0.2.37` y el Widescreen Fix en `WindowedMode = 1`,
+  `SkipIntro = 1` (U2 además `NoOpticalDriveFix = 1`).
+- `INSTALAR.bat` / `install.ps1`: detección por registro, rutas típicas o
+  selector de carpeta; UAC; backup en `Documentos\NFS-Online\Backup`.
+- `DESINSTALAR.bat` / `uninstall.ps1`: quita solo los archivos del paquete.
+- Probado en una carpeta falsa de U2: instaló y desinstaló los archivos
+  correctos, conservó `dinput8.dll` y `SPEED2.EXE`.
+- Los ZIP y `manifest.json` viven en
+  `E:\vscode-workspace\NFS-Online-Artifacts\downloads\`; no se versionan.
+
+### Pruebas ejecutadas
+
+```text
+python -m pytest web/tests/test_config.py web/tests/test_health.py -q   -> 3 passed
+python -m pytest web/tests/test_db.py -q                                -> 5 passed
+python -m pytest web/tests/test_accounts.py -q                          -> 6 passed
+python -m pytest web/tests/test_downloads.py -q                         -> 5 passed
+python -m pytest web/tests/test_api.py -q                               -> 7 passed
+python -m pytest web/tests/test_pages.py web/tests/test_api.py -q       -> 10 passed
+python -m pytest tests/test_package_clients.py -q                       -> 5 passed
+python -m pytest web/tests tests/test_package_clients.py -q             -> 34 passed
+```
+
+Prueba HTTP real:
+
+- `GET /healthz` → `200 {"ok":true}`.
+- `GET /api/connect` → 3 descargas `available=true`.
+- Registro `SmokeTest` por API → `200`, `/me` autenticado, preferencias OK.
+- Registro `BrowserTest` desde la página → panel de cuenta visible, logout y
+  login posteriores OK.
+- Descarga `GET /downloads/u2` → 6.103.984 bytes, SHA-256
+  `8b9b6115eb0863d00e7a5caf04c325f448ac9689b2c443a474cad98881317687`,
+  igual al manifest.
+- Los usuarios de prueba se borraron de `data/accounts.sqlite3`; queda
+  `TestDriver`.
+
+### Incidencia SQLite al correr la web en Windows
+
+Al ejecutar `uvicorn` en el host Windows contra el mismo `data/accounts.sqlite3`
+que el contenedor, el servidor registró:
+
+```text
+sqlite3.OperationalError: disk I/O error
+sqlite3.OperationalError: unable to open database file
+```
+
+La web se movió a un contenedor (`nfs-web-dev`) con el mismo bind mount
+`../data` que `nfs-server-dev`. Después de eso, registrar una cuenta desde la
+web y verla con `python nfs_online.py account list` funcionó sin errores nuevos.
+
+### Red LAN
+
+- El puerto **8080** lo usa NFS World (y `sbrw-core` en Windows); Assetto ocupa
+  `8081-8088`; la web NFS quedó en **8096** (`0.0.0.0:8096->8080/tcp`).
+- Reglas de firewall agregadas, limitadas a `192.0.2.0/24`:
+  - `NFS Online web 8080 (LAN)` y `NFS Online web 8081 (LAN)` (pruebas anteriores).
+  - `NFS Online web 8096 (LAN)` (puerto definitivo).
+- `nfs-server-dev` publica los puertos de juego en `0.0.0.0` y se reinició con
+  `NFS_PUBLIC_HOST=192.0.2.37` / `NFS_LOCAL_IPV4=192.0.2.37`.
+- Pendiente: instalar el paquete en la otra PC y verificar registro, descarga y
+  entrada a la sala desde allí.
+
+## Hito: prueba LAN completa con 2 jugadores y carrera (2026-11-21)
+
+La segunda PC de la LAN completó el flujo entero:
+
+1. Abrió `http://192.0.2.37:8096`.
+2. Creó la cuenta `driver4` con persona `DriverD`.
+3. Descargó el pack U2 + MW y lo instaló con `INSTALAR.bat`.
+4. Abrió U2, inició sesión y entró a la sala de `TestDriver`.
+5. Inició una carrera y vio el auto de la otra PC.
+
+Evidencia:
+
+- `logs/classic.log`:
+  - Segundo cliente: `underground2 lobby command=auth result=ok`.
+  - `underground2 lobby command=pers result=ok`.
+  - `underground2 lobby command=gjoi result=game_joined`.
+  - `underground2 lobby command=gset result=game_settings`.
+  - `underground2 stock directory reply ... lobby=192.0.2.37:20922`.
+  - Relay de carrera para dos usuarios:
+    - `user=463561769 ... target=100.64.0.1:3658 ... relayed=1`
+    - `user=573763722 ... target=100.64.0.2:3658 ... relayed=1`
+- `runtime/classic-status.json`:
+  - Sala `016.TestDriver`, `players=2`, `capacity=6`, `state=ACTIVE`.
+  - Personas `DriverD` y `TestDriver`.
+  - `last_race_activity_at` actualizado.
+- Web `/api/live`: `totalPlayers=2`, misma sala.
+- Cuenta en SQLite: `account=driver4 persona=DriverD enabled=1`.
+
+Resultado: registro, descarga, instalación, login, sala y carrera de dos jugadores
+funcionando por LAN. No hubo errores nuevos en el servidor; los `disk I/O error`
+del log son de la prueba anterior con la web en Windows.
+
 ## Verificación actual
 
 - Servidor:
   - `docker exec nfs-server-dev python nfs_online.py status` → `Classic: running`, `Messenger: running in Classic`.
   - `Test-NetConnection 127.0.0.1` OK en `13505`, `20921`, `20922`, `20923`, `30920`, `30921`.
-  - `runtime/classic-status.json` reporta U2 y MW habilitados, la sala U2 `017.TestDriver` (`players=1`, `capacity=6`, `state=OPEN`) y MW sin salas.
-- Clientes:
+  - `runtime/classic-status.json` reporta U2 y MW habilitados y sin salas (el jugador salió).
+  - `nfs-server-dev` anuncia `192.0.2.37`; `nfs-web-dev` corre en `http://192.0.2.37:8096`.
+- Clientes locales:
   - Archivos presentes en ambas carpetas.
   - `dinput8.dll` idéntico en U2/MW.
-  - `net_u2.ini` y `net_mw.ini` con `host = 127.0.0.1`.
+  - `net_u2.ini` y `net_mw.ini` locales con `host = 127.0.0.1`.
+  - Los ZIP de descarga usan `host = 192.0.2.37`.
 - Repo:
   - Working tree: el checker ve `data/accounts.sqlite3`, `data/server-state.json`, `runtime/*.json`, `logs/*.log` y `__pycache__` del test local (ignorados por git).
   - Árbol commiteado: `git archive HEAD` + checker → OK.
@@ -187,7 +314,10 @@ Este documento y `AGENTS.md` forman parte de este mismo commit.
 2. [x] Abrir U2 y probar login online:
    - Resultado: `auth result=ok`, `pers result=ok`, Messenger `underground2-classic-messenger` y sala `017.TestDriver` creada.
 3. [ ] Probar la sala con un segundo jugador/cuenta (mínimo 2).
-4. [ ] Comenzar la implementación de `web/` según el plan.
+4. [x] Implementar el MVP de `web/` (registro, login, descargas y landing).
+5. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8096`, crear cuenta, descargar e instalar el pack U2 + MW.
+6. [ ] Probar la sala con la segunda PC y confirmar que el servidor anuncia `192.0.2.37`.
+7. [ ] Probar Most Wanted con el Widescreen Fix y DSR en fullscreen.
 
 ### Restaurar los videos de MW
 

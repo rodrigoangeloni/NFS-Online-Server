@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080a08">
+  <title>Mi cuenta — NFS Online</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="account-page">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="NFS Online, inicio">
+      <span class="brand-mark">NFS</span>
+      <span class="brand-word">ONLINE</span>
+    </a>
+    <nav class="topnav" aria-label="Principal">
+      <a href="/#estado">Estado</a>
+      <a href="/#descargas">Descargas</a>
+      <a href="/#como-entrar">Cómo entrar</a>
+      <a href="/account" aria-current="page">Cuenta</a>
+    </nav>
+    <a class="btn btn-small btn-ghost" href="/">Volver al inicio</a>
+  </header>
+
+  <main id="contenido" class="account-main">
+    <section class="account-intro">
+      <p class="eyebrow"><span class="pulse"></span> Acceso de piloto</p>
+      <h1>Tu cuenta.<br><em>Tu garaje.</em></h1>
+      <p>
+        La misma cuenta sirve para la web y para Underground 2 / Most Wanted.
+        Si ya jugaste en el servidor, entrá con tu usuario de siempre.
+      </p>
+    </section>
+
+    <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
+
+    <div id="authPanels" class="auth-grid">
+      <section id="loginPanel" class="panel auth-panel" aria-labelledby="login-title">
+        <div class="panel-head">
+          <span class="panel-index">01</span>
+          <div>
+            <h2 id="login-title">Entrar</h2>
+            <p class="panel-sub">Ya tengo cuenta.</p>
+          </div>
+        </div>
+        <form id="loginForm" novalidate>
+          <label class="field">
+            <span>Usuario o email</span>
+            <input id="loginIdentifier" name="identifier" autocomplete="username" required>
+          </label>
+          <label class="field">
+            <span>Contraseña</span>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+        </form>
+      </section>
+
+      <section id="createPanel" class="panel auth-panel auth-panel-accent" aria-labelledby="create-title">
+        <div class="panel-head">
+          <span class="panel-index">02</span>
+          <div>
+            <h2 id="create-title">Crear cuenta</h2>
+            <p class="panel-sub">Primera vez en el servidor.</p>
+          </div>
+        </div>
+        <form id="createForm" novalidate>
+          <div class="field-row">
+            <label class="field">
+              <span>Nombre de cuenta</span>
+              <input id="createAccountName" name="accountName" autocomplete="username" minlength="3" maxlength="24" required>
+              <small>3 a 24 caracteres. Letras, números, guion o guion bajo.</small>
+            </label>
+            <label class="field">
+              <span>Nombre de jugador (persona)</span>
+              <input id="createPersona" name="persona" minlength="3" maxlength="24" required>
+              <small>Es el nombre que van a ver los demás en el juego.</small>
+            </label>
+          </div>
+          <label class="field">
+            <span>Email <em>(opcional)</em></span>
+            <input id="createEmail" name="email" type="email" autocomplete="email">
+            <small>Sirve para recuperar la cuenta más adelante.</small>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Contraseña</span>
+              <input id="createPassword" name="password" type="password" autocomplete="new-password" minlength="8" required>
+              <small>Mínimo 8 caracteres.</small>
+            </label>
+            <label class="field">
+              <span>Repetir contraseña</span>
+              <input id="createPasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required>
+            </label>
+          </div>
+          <label class="field">
+            <span>Código de invitación</span>
+            <input id="createInviteCode" name="inviteCode" autocomplete="off" placeholder="NFS-XXXX-XXXX">
+            <small>Si te pasaron un código, pegalo acá. Si el servidor está abierto, podés dejarlo vacío.</small>
+          </label>
+          <label class="check">
+            <input id="createAppearOnline" name="appearOnline" type="checkbox" checked>
+            <span>Mostrar mi persona en la lista de jugadores en línea.</span>
+          </label>
+          <button class="btn btn-primary btn-block" type="submit">Crear cuenta</button>
+        </form>
+      </section>
+    </div>
+
+    <section id="accountPanel" class="panel account-panel" hidden aria-labelledby="account-title">
+      <div class="panel-head">
+        <span class="panel-index">OK</span>
+        <div>
+          <h2 id="account-title">Sesión iniciada</h2>
+          <p class="panel-sub">Tu cuenta está lista para jugar.</p>
+        </div>
+        <button id="logoutButton" class="btn btn-small btn-ghost" type="button">Cerrar sesión</button>
+      </div>
+
+      <div class="account-summary">
+        <div>
+          <span class="board-label">CUENTA</span>
+          <strong id="accountName">—</strong>
+        </div>
+        <div>
+          <span class="board-label">PERSONA</span>
+          <strong id="accountPersona">—</strong>
+        </div>
+        <div>
+          <span class="board-label">EMAIL</span>
+          <strong id="accountEmail">—</strong>
+        </div>
+      </div>
+
+      <div class="account-columns">
+        <div>
+          <h3>Personas</h3>
+          <ul id="personaList" class="tag-list"></ul>
+          <label class="check">
+            <input id="appearOnlineToggle" type="checkbox">
+            <span>Aparecer en línea en la web y el Messenger.</span>
+          </label>
+        </div>
+        <div>
+          <h3>Accesos rápidos</h3>
+          <p class="muted">Descargá el cliente de tu juego y seguí los pasos del instalador.</p>
+          <a class="btn btn-primary" href="/#descargas">Ir a descargas</a>
+        </div>
+      </div>
+
+      <div id="statsGrid" class="stats-grid" hidden></div>
+      <div id="socialInbox" hidden></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <span class="brand-mark">NFS</span>
+      <span class="brand-word">ONLINE</span>
+    </div>
+    <p>Servidor comunitario sin fines de lucro. Need for Speed es una marca de Electronic Arts; este sitio no está afiliado a EA.</p>
+  </footer>
+
+  <script src="/static/account.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Production web container for the NFS Online community site.
+# Nginx Proxy Manager terminates TLS and forwards nfs-fps.duckdns.org
+# to 127.0.0.1:8096; 8096 avoids NFS World (8080) and Assetto (8081-8088).
+services:
+  nfs-web:
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
+    container_name: nfs-web
+    environment:
+      NFS_WEB_CONFIG: /app/config/server.toml
+      NFS_WEB_PUBLIC_HOST: ${NFS_WEB_PUBLIC_HOST:-nfs-fps.duckdns.org}
+      NFS_WEB_SITE_URL: ${NFS_WEB_SITE_URL:-https://nfs-fps.duckdns.org}
+      NFS_WEB_DOWNLOADS_DIR: /app/downloads
+      NFS_WEB_INVITE_REQUIRED: "1"
+      # NPM terminates TLS and the published port is loopback-only.
+      # Harden with trusted proxy CIDRs before accepting public HTTP.
+      NFS_WEB_ALLOW_INSECURE: ${NFS_WEB_ALLOW_INSECURE:-1}
+      NFS_WEB_TRUSTED_PROXY_IPS: ${NFS_WEB_TRUSTED_PROXY_IPS:-}
+    ports:
+      - "127.0.0.1:8096:8080"
+    volumes:
+      - ../data:/app/data
+      - ../runtime:/app/runtime:ro
+      - ../config:/app/config:ro
+      - ../server:/app/server:ro
+      - ../web:/app/web:ro
+      - ${NFS_DOWNLOADS_DIR:-../../artifacts/downloads}:/app/downloads:ro
+    restart: unless-stopped

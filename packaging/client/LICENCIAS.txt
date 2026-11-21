@@ -1,0 +1,27 @@
+NFS ONLINE - LICENCIAS Y CREDITOS
+=================================
+
+1. NFS Online Server / cliente
+   Licencia: AGPL-3.0-or-later.
+   El texto completo esta en LICENSE-NFS-Online.txt.
+   Codigo fuente: el repositorio del proyecto NFS Online Server.
+
+2. WidescreenFixesPack (fix de pantalla para U2 y MW)
+   Autor: ThirteenAG y colaboradores.
+   Licencia: GNU General Public License v3.0 (GPL-3.0).
+   El texto completo esta en GPL-3.0.txt.
+   Fuente: https://github.com/ThirteenAG/WidescreenFixesPack
+   Releases usados: nfsu2 y nfsmw.
+
+3. Ultimate ASI Loader (dinput8.dll)
+   Autor: ThirteenAG.
+   Licencia: MIT.
+   Fuente: https://github.com/ThirteenAG/Ultimate-ASI-Loader
+
+4. Need for Speed
+   Need for Speed y sus nombres relacionados son marcas de
+   Electronic Arts. Este proyecto es comunitario, sin fines de lucro,
+   y no esta afiliado ni respaldado por Electronic Arts.
+
+Este paquete solo contiene los archivos necesarios para conectarse al
+servidor y mejorar la pantalla. No incluye el juego ni contenido de EA.

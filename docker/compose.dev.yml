@@ -8,8 +8,8 @@ services:
     container_name: nfs-server-dev
     environment:
       NFS_GAMES: u2,mw
-      NFS_PUBLIC_HOST: 127.0.0.1
-      NFS_LOCAL_IPV4: 127.0.0.1
+      NFS_PUBLIC_HOST: ${NFS_PUBLIC_HOST:-127.0.0.1}
+      NFS_LOCAL_IPV4: ${NFS_LOCAL_IPV4:-127.0.0.1}
       NFS_LOG_LEVEL: INFO
     ports:
       - "13505:13505"
@@ -24,4 +24,27 @@ services:
       - ../runtime:/app/runtime
       - ../logs:/app/logs
       - ../config:/app/config:ro
+    restart: unless-stopped
+
+  nfs-web:
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
+    container_name: nfs-web-dev
+    environment:
+      NFS_WEB_CONFIG: /app/config/server.toml
+      NFS_WEB_PUBLIC_HOST: ${NFS_WEB_PUBLIC_HOST:-127.0.0.1}
+      NFS_WEB_SITE_URL: ${NFS_WEB_SITE_URL:-http://127.0.0.1:8080}
+      NFS_WEB_DOWNLOADS_DIR: /app/downloads
+      NFS_WEB_ALLOW_INSECURE: "1"
+      NFS_WEB_INVITE_REQUIRED: ${NFS_WEB_INVITE_REQUIRED:-1}
+    ports:
+      - "0.0.0.0:8096:8080"
+    volumes:
+      - ../data:/app/data
+      - ../runtime:/app/runtime:ro
+      - ../config:/app/config:ro
+      - ../server:/app/server:ro
+      - ../web:/app/web:ro
+      - ${NFS_DOWNLOADS_DIR:-../../NFS-Online-Artifacts/downloads}:/app/downloads:ro
     restart: unless-stopped

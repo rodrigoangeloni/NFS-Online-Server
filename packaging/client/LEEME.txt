@@ -1,0 +1,111 @@
+============================================================
+ NFS ONLINE - CLIENTE PARA UNDERGROUND 2 Y MOST WANTED
+ Version __VERSION__
+ Servidor: __HOST__
+============================================================
+
+QUE ES ESTO
+-----------
+Este paquete instala dos cosas en tu juego:
+
+1. El cliente online de NFS Online, para entrar al servidor comunitario.
+2. El fix de pantalla, para jugar en resoluciones modernas, sin bordes
+   y sin la barra de Windows.
+
+No es un juego completo. Necesitas tener Need for Speed Underground 2
+o Most Wanted (2005) ya instalado en tu PC.
+
+COMO INSTALAR (3 PASOS)
+-----------------------
+1. Descomprimi TODO este ZIP en una carpeta normal.
+   No lo ejecutes desde adentro del ZIP.
+2. Hace doble clic en INSTALAR.bat.
+3. Acepta el aviso de Windows que pide permisos de administrador.
+
+El instalador busca el juego automaticamente. Si lo encuentra, copia
+los archivos y termina. Si no lo encuentra, abre una ventana para que
+elijas la carpeta donde esta el juego:
+
+  - Underground 2: la carpeta que contiene SPEED2.EXE
+  - Most Wanted: la carpeta que contiene speed.exe
+
+Si Windows muestra "Windows protegio tu PC" (SmartScreen):
+  Más informacion -> Ejecutar de todas formas.
+
+QUE SE INSTALA
+--------------
+- net_u2.asi / net_mw.asi: cliente de red del servidor.
+- net_u2.ini / net_mw.ini: configuracion con la direccion del servidor.
+- scripts\: fix de pantalla (Widescreen Fix).
+- dinput8.dll: cargador de mods, solo si tu juego no tiene uno.
+
+El instalador NO borra tus partidas ni tu configuracion. Si reemplaza
+algo, guarda una copia en:
+
+  Documentos\NFS-Online\Backup\(fecha)\(juego)
+
+COMO JUGAR ONLINE
+-----------------
+1. Crea tu cuenta en la web del servidor.
+2. Abri Underground 2 o Most Wanted.
+3. Entra a Online e inicia sesion con la misma cuenta y contrasena.
+4. Busca la sala o crea la tuya.
+
+La direccion del servidor ya viene configurada en el paquete:
+  __HOST__
+
+PANTALLA
+--------
+El fix viene configurado en modo borderless:
+  WindowedMode = 1
+
+Se ve como pantalla completa, ocupa todo el monitor y tapa la barra de
+Windows, pero sigue siendo una ventana (podes hacer Alt+Tab).
+
+Si queres cambiar el modo, edita el archivo:
+
+  scripts\NFSUnderground2.WidescreenFix.ini
+  scripts\NFSMostWanted.WidescreenFix.ini
+
+y cambia WindowedMode:
+
+  0 = Fullscreen (para DSR)
+  1 = Borderless (recomendado)
+  2 = Con borde
+  3 = Con borde y redimensionable (para mover entre monitores)
+  4 = Borderless fullscreen
+  5 = Borderless fullscreen estirado
+
+DSR / resoluciones altas:
+  Para usar una resolucion DSR de NVIDIA, elegi WindowedMode = 0 y
+  despues elegi la resolucion DSR en Opciones -> Pantalla del juego.
+  En modo ventana/borderless la resolucion DSR no hace downsample.
+
+Mover entre monitores:
+  Con WindowedMode = 1 la ventana queda en el monitor principal.
+  Si necesitas moverla, usa WindowedMode = 3 y arrastrala con el borde.
+
+DESINSTALAR
+-----------
+Doble clic en DESINSTALAR.bat. Quita el cliente online y el fix.
+No borra el ASI Loader ni tus partidas.
+
+Si algo falla
+-------------
+- Verifica que elegiste la carpeta correcta (donde esta el .exe).
+- Si el juego no abre el fix, puede haber otro dinput8.dll/dsound.dll
+  instalado. El instalador lo conserva a proposito.
+- Los detalles tecnicos quedan en:
+  Documentos\NFS-Online\Backup
+
+CREDITOS
+--------
+- Fix de pantalla: ThirteenAG / WidescreenFixesPack (GPL-3.0)
+  https://github.com/ThirteenAG/WidescreenFixesPack
+- ASI Loader: Ultimate ASI Loader (MIT)
+  https://github.com/ThirteenAG/Ultimate-ASI-Loader
+- Cliente y servidor: NFS Online Server (AGPL-3.0)
+- Need for Speed es una marca de Electronic Arts. Este proyecto no
+  esta afiliado ni respaldado por EA.
+
+Lee LICENCIAS.txt para el detalle legal.

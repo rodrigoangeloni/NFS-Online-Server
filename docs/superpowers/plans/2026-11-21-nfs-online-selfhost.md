@@ -684,7 +684,7 @@ Mostrar `serverAddress`, chips online/offline, tarjetas con versión, tamaño, S
 
 - [ ] **Step 4: Verify with the running app**
 
-Run: `uvicorn web.app:app --port 8080` y abrir `/`. Comprobar que el polling no genera errores en consola y que los estados offline se muestran correctamente.
+Run: `uvicorn web.app:app --port 8096` y abrir `/`. Comprobar que el polling no genera errores en consola y que los estados offline se muestran correctamente.
 
 - [ ] **Step 5: Commit**
 
@@ -919,13 +919,13 @@ Usa `ss -ltn`/`ss -lun` y sale 1 si falta un puerto. Así el watchdog detecta ca
 
 - [ ] **Step 2: Write the Dockerfile and compose**
 
-`web/Dockerfile`: `python:3.12-slim`, `ENV PYTHONPATH=/app/server:/app`, crear `appuser`, copiar `web/` y `server/`, instalar `web/requirements.txt`, `USER appuser`, `CMD ["uvicorn","web.app:app","--host","0.0.0.0","--port","8080","--proxy-headers"]`. `docker/compose.web.yml`: puerto `127.0.0.1:8080:8080`, volúmenes `../data:/app/data`, `../runtime:/app/runtime:ro`, `../config:/app/config:ro`, `../server:/app/server:ro`, `${NFS_DOWNLOADS_DIR:-../NFS-Online-Artifacts/downloads}:/app/downloads:ro`, `NFS_WEB_DOWNLOADS_DIR=/app/downloads`, `env_file`, `restart: unless-stopped`, `user: "${NFS_UID:-1000}:${NFS_GID:-1000}"` para que `appuser` pueda escribir en `data/`.
+`web/Dockerfile`: `python:3.12-slim`, `ENV PYTHONPATH=/app/server:/app`, crear `appuser`, copiar `web/` y `server/`, instalar `web/requirements.txt`, `USER appuser`, `CMD ["uvicorn","web.app:app","--host","0.0.0.0","--port","8080","--proxy-headers"]`. `docker/compose.web.yml`: puerto `127.0.0.1:8096:8080`, volúmenes `../data:/app/data`, `../runtime:/app/runtime:ro`, `../config:/app/config:ro`, `../server:/app/server:ro`, `${NFS_DOWNLOADS_DIR:-../NFS-Online-Artifacts/downloads}:/app/downloads:ro`, `NFS_WEB_DOWNLOADS_DIR=/app/downloads`, `env_file`, `restart: unless-stopped`, `user: "${NFS_UID:-1000}:${NFS_GID:-1000}"` para que `appuser` pueda escribir en `data/`.
 
 Para Docker Desktop, `docker/Dockerfile.server`: `python:3.12-slim`, copiar el repo, `CMD ["./docker/entrypoint-server.sh"]`. `docker/entrypoint-server.sh` arranca `python nfs_online.py start --games "${NFS_GAMES:-u2,mw}" --daemon`, atrapa `TERM/INT` y ejecuta `python nfs_online.py stop` antes de salir. `docker/compose.dev.yml`: `nfs-server` + `nfs-web`, bind mounts `../data`, `../runtime` (runtime read-only en la web) y `../NFS-Online-Artifacts/downloads` (read-only), `NFS_GAMES=u2,mw`, `NFS_WEB_ALLOW_INSECURE=1`, `NFS_WEB_PUBLIC_HOST=localhost`, `NFS_WEB_DOWNLOADS_DIR=/app/downloads`, y puertos publicados TCP `13505/20921/20922/20923/30920/30921` + UDP `20000`. Para probar desde el mismo PC, `NFS_PUBLIC_HOST=127.0.0.1` y `NFS_LOCAL_IPV4=127.0.0.1`; para LAN, usar la IP LAN del host Windows. En dev, ejecutar ambos contenedores con el mismo UID (o root) para que `data/` sea escribible; en producción se usa el UID del host `nfs`. Si SQLite WAL da problemas de locking en el bind mount de Windows, cambiar a volúmenes nombrados.
 
 - [ ] **Step 3: Write `docs/deployment.md`**
 
-Incluir: requisitos, clonado, usuario `nfs`, venv, `python nfs_online.py check`, `configure --public-host nfs-fps.duckdns.org`, `create-account`, systemd, firewall, DNS/DuckDNS, NPM (`nfs-fps.duckdns.org` → `127.0.0.1:8080`), Docker, backups, actualización y troubleshooting. Documentar `NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org` y `NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org`. En `docs/local-testing.md`, documentar `docker compose -f docker/compose.dev.yml up --build`, la URL `http://localhost:8080`, cómo crear la primera invitación y cómo probar U2/MW contra `127.0.0.1`.
+Incluir: requisitos, clonado, usuario `nfs`, venv, `python nfs_online.py check`, `configure --public-host nfs-fps.duckdns.org`, `create-account`, systemd, firewall, DNS/DuckDNS, NPM (`nfs-fps.duckdns.org` → `127.0.0.1:8096`), Docker, backups, actualización y troubleshooting. Documentar `NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org` y `NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org`. En `docs/local-testing.md`, documentar `docker compose -f docker/compose.dev.yml up --build`, la URL `http://localhost:8096`, cómo crear la primera invitación y cómo probar U2/MW contra `127.0.0.1`.
 
 - [ ] **Step 4: Verify**
 
@@ -979,7 +979,7 @@ git commit -m "ci: run web and client packaging tests"
 
 - [ ] **Step 1: Write the runbook**
 
-Incluir: probar primero `docker compose -f docker/compose.dev.yml up --build` y el flujo de registro/descarga en `http://localhost:8080`; después, en Debian, arrancar el servidor con `--games u2,mw`, comprobar `status`, abrir puertos 13505/20921/20922/20923/30920/30921/20000, crear invitación, registrar cuenta, descargar ZIP, instalar en U2/MW, entrar al lobby, ver sala en la landing y revisar logs. Carbon queda como bloque separado de Fase 1b (puertos 18210/18215/19119/9000).
+Incluir: probar primero `docker compose -f docker/compose.dev.yml up --build` y el flujo de registro/descarga en `http://localhost:8096`; después, en Debian, arrancar el servidor con `--games u2,mw`, comprobar `status`, abrir puertos 13505/20921/20922/20923/30920/30921/20000, crear invitación, registrar cuenta, descargar ZIP, instalar en U2/MW, entrar al lobby, ver sala en la landing y revisar logs. Carbon queda como bloque separado de Fase 1b (puertos 18210/18215/19119/9000).
 
 - [ ] **Step 2: Execute the checklist on Debian**
 
@@ -1043,7 +1043,7 @@ git commit -m "chore(deploy): add backups and update scripts"
 - `python -m pytest web/tests tests/test_package_clients.py -q` en verde.
 - `python nfs_online.py check` en verde.
 - `python tools/check_public_tree.py` en verde sobre un clon limpio o `git archive HEAD` (el working tree con `runtime/`, `data/`, `logs/` y `__pycache__` locales no cuenta).
-- `docker compose -f docker/compose.dev.yml up --build` levanta U2/MW + web y el registro funciona en `http://localhost:8080`.
+- `docker compose -f docker/compose.dev.yml up --build` levanta U2/MW + web y el registro funciona en `http://localhost:8096`.
 - `dig +short nfs-fps.duckdns.org` devuelve la IP pública.
 - `https://nfs-fps.duckdns.org/healthz` responde `{"ok":true}`.
 - Un amigo completa registro → descarga → instalación → partida en U2 o MW.

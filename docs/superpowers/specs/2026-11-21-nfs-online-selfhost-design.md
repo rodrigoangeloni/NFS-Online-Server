@@ -269,8 +269,9 @@ Payload:
 
 Reglas:
 
-- `accountName`: 3–24 caracteres, letras/números/`_`/`-`.
-- `persona`: 3–24 caracteres, mismo conjunto; si se omite, se usa `accountName`.
+- `accountName`: 3–15 caracteres, letras/números/`_`/`-`. El cliente
+  clásico rechaza nombres de 16 o más antes de enviarlos al servidor.
+- `persona`: 3–15 caracteres, mismo conjunto; si se omite, se usa `accountName`.
 - `password`: mínimo 8 caracteres.
 - `email`: opcional; si se envía, validar formato y unicidad (la propia DB lo hace).
 - `inviteCode`: obligatorio salvo que `NFS_WEB_INVITE_REQUIRED=0`.

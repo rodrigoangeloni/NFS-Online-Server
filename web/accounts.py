@@ -19,7 +19,10 @@ from web.config import WebSettings
 from web.db import Preferences, Session, WebDatabase
 
 
-NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{3,24}$")
+# The classic clients reject account and persona names longer than 15
+# characters before they reach the server ("El nombre de cuenta EA
+# especificado no es válido"), so the website must not accept them.
+NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{3,15}$")
 RECOVERY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
@@ -107,11 +110,11 @@ class AccountService:
         password = str(payload.password or "")
         if not NAME_PATTERN.fullmatch(account_name):
             raise RegistrationError(
-                "El nombre de cuenta debe tener entre 3 y 24 caracteres: letras, números, guion o guion bajo."
+                "El nombre de cuenta debe tener entre 3 y 15 caracteres: letras, números, guion o guion bajo."
             )
         if not NAME_PATTERN.fullmatch(persona):
             raise RegistrationError(
-                "El nombre de jugador debe tener entre 3 y 24 caracteres: letras, números, guion o guion bajo."
+                "El nombre de jugador debe tener entre 3 y 15 caracteres: letras, números, guion o guion bajo."
             )
         if len(password) < 8:
             raise RegistrationError("La contraseña debe tener al menos 8 caracteres.")

@@ -284,6 +284,9 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 - Los juegos son repacks de ElAmigos. Si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir. Si el cliente no engancha, probar con un ejecutable original 1.2/1.3.
 - Docker Desktop no reproduce exactamente el host networking de Linux; la validación final es en el Debian.
 - La web NFS corre en Docker y comparte `data/accounts.sqlite3` con el servidor. No ejecutar `uvicorn` en Windows contra esa base mientras el contenedor está activo: aparecen `disk I/O error`.
+- **Nombres de cuenta/persona:** máximo **15 caracteres**. El cliente
+  U2/MW rechaza 16 o más localmente con “El nombre de cuenta EA
+  especificado no es válido” y no manda `auth`; la web valida 3-15.
 - El puerto `8080` lo usa NFS World; Assetto ocupa `8081-8088`; la web NFS usa `8096` en loopback.
 - En Debian, NPM debe apuntar a `nfs-web:8080` (red Docker), no a `192.0.2.200:8096`. El bind loopback es lo que evita exponer la web sin TLS.
 - Para LAN, el servidor debe arrancar con `NFS_PUBLIC_HOST=192.0.2.37` y `NFS_LOCAL_IPV4=192.0.2.37`; si no, anuncia `127.0.0.1` y el cliente remoto no encuentra el lobby.

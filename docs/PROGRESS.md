@@ -396,6 +396,22 @@ Verificación en el Debian por HTTPS:
 
 Tests: `python -m pytest web/tests -q` → **47 passed**.
 
+## Fix: límite de 15 caracteres en cuentas (2026-11-21)
+
+El cliente clásico valida el nombre de cuenta **antes** de enviar `auth`.
+`driverdriver1234` (16 caracteres) mostraba “El nombre de cuenta EA
+especificado no es válido” y el servidor no registraba ningún intento;
+`driverdriver123` (15) entraba sin problema.
+
+- `web/accounts.py`: `NAME_PATTERN` pasa de `{3,24}` a `{3,15}` para
+  cuenta y persona, con el motivo documentado en el código.
+- `web/static/account.html`: `maxlength=15` y texto de ayuda actualizado.
+- Test nuevo: `test_register_rejects_names_longer_than_the_game_accepts`
+  (rojo antes del cambio, verde después).
+- Suite: `python -m pytest web/tests -q` → **53 passed**.
+- En el Debian se borró la cuenta de prueba de 16 caracteres; backup en
+  `data/backups/accounts-before-delete-*.sqlite3`.
+
 ## Verificación actual
 
 - Servidor:

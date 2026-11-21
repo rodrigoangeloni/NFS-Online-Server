@@ -3,7 +3,13 @@ from __future__ import annotations
 import pytest
 
 from common.accounts import SharedAccountExistsError
-from web.accounts import AccountService, AuthError, InviteError, RegisterPayload
+from web.accounts import (
+    AccountService,
+    AuthError,
+    InviteError,
+    RegisterPayload,
+    RegistrationError,
+)
 
 
 def make_payload(code: str, name: str) -> RegisterPayload:
@@ -30,6 +36,12 @@ def test_register_creates_account_session_and_preferences(service: AccountServic
     assert session is not None
     assert session.account_id == account.account_id
     assert service.web_db.get_preferences(account.account_id).appear_online is True
+
+
+def test_register_rejects_names_longer_than_the_game_accepts(service: AccountService) -> None:
+    code = service.web_db.create_invite("test", 1, None, "test")
+    with pytest.raises(RegistrationError):
+        service.register(make_payload(code, "driverdriver1234"))
 
 
 def test_register_rejects_used_invite(service: AccountService) -> None:

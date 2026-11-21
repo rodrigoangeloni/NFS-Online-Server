@@ -245,6 +245,10 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   puede resetear cualquier cuenta desde el panel.
 - Email obligatorio para cuentas nuevas; las viejas lo cargan desde
   `/account`.
+- Anti-spam: 5 intentos por minuto por IP real para login, registro,
+  recuperación y login admin. La IP real se toma de `X-Real-IP`
+  (`X-Forwarded-For` como respaldo) solo desde
+  `NFS_WEB_TRUSTED_PROXY_IPS=172.28.0.0/16` (red de NPM).
 - Runbook: `docs/deployment.md`.
 
 ## Automatización del juego en Windows

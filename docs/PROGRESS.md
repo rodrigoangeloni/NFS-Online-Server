@@ -360,6 +360,10 @@ Se agregó seguridad de cuentas sin depender de un servidor de correo.
   para cualquier jugador.
 - Al resetear/recuperar se invalidan las sesiones web de esa cuenta.
 - La temporal vencida se invalida al intentar entrar por la web.
+- **Anti-spam:** límite de 5 intentos por minuto por IP real para login,
+  registro, recuperación y login admin. Detrás de NPM se usa
+  `X-Real-IP`/`X-Forwarded-For` solo si la conexión viene de
+  `172.28.0.0/16`; si no, se ignora para evitar spoofing.
 
 Verificación en el Debian por HTTPS:
 

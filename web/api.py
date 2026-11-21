@@ -22,7 +22,7 @@ from web.accounts import (
 from web.admin import AdminAuthError, AdminService
 from web.config import WebSettings
 from web.downloads import DownloadNotFound, DownloadService
-from web.security import RateLimiter, require_csrf, require_https
+from web.security import RateLimiter, client_ip, require_csrf, require_https
 
 
 SESSION_COOKIE = "nfs_web_session"
@@ -113,8 +113,7 @@ def _session_token(request: Request) -> str:
 
 
 def _client_key(request: Request, prefix: str) -> str:
-    host = request.client.host if request.client else "unknown"
-    return f"{prefix}:{host}"
+    return f"{prefix}:{client_ip(request, request.app.state.settings)}"
 
 
 def live_payload(runtime_dir: Path) -> dict[str, Any]:

@@ -322,6 +322,25 @@ Se desplegó el servidor en `debian-server` (`192.0.2.200`, público
   el relay UDP `20000-20005`.
 - Invitación de prueba creada en la SQLite del Debian (no versionada).
 
+## Hito: panel de administración de invitaciones (2026-11-21)
+
+Se agregó un panel privado para no depender de la terminal para ver o crear
+códigos.
+
+- URL: `https://nfs-fps.duckdns.org/admin`.
+- Login con clave PBKDF2 (`NFS_WEB_ADMIN_PASSWORD_HASH`), cookie
+  `nfs_web_admin`, CSRF y rate limit.
+- Lista invitaciones con código visible, etiqueta, usos, vencimiento y
+  estado (`activa`, `agotada`, `vencida`, `revocada`).
+- Permite crear invitaciones (etiqueta, usos, días) y revocarlas.
+- El código se guarda en la SQLite además del hash para poder mostrarlo
+  meses después; la base sigue protegida por permisos del servidor.
+- Los códigos existentes `<invitacion>` y `<invitacion de prueba>` se
+  completaron en la columna `code` para que aparezcan en el panel.
+- Probado por HTTPS: login, listado, creación y revocación.
+- Tests: `python -m pytest web/tests tests/test_package_clients.py -q`
+  → **43 passed**.
+
 ## Verificación actual
 
 - Servidor:

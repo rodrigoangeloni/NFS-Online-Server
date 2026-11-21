@@ -49,9 +49,10 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Sala U2 `016.TestDriver` con 2 jugadores (`DriverD`, `TestDriver`) y carrera sincronizada.
 - [x] Debian desplegado: systemd para el juego, web Docker, NPM y HTTPS público.
 - [x] `https://nfs-fps.duckdns.org` sirve landing, cuenta, descargas y registro con invitación.
+- [x] Panel admin `/admin`: login, listar, crear y revocar invitaciones.
 - [ ] Probar una partida completa desde fuera de la LAN (UDP `20000-20005`).
 - [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
-- [ ] Completar web: estado en vivo completo, leaderboards, noticias/TOS y admin.
+- [ ] Completar web: estado en vivo completo, leaderboards y noticias/TOS.
 - [ ] Fase 1b: Carbon.
 
 ## Artefactos locales (esta PC)
@@ -230,6 +231,12 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   `20000-20005`; `8096` queda en loopback.
 - TCP de juego verificados desde Internet; falta la prueba de carrera
   externa para confirmar UDP.
+- Panel admin: `https://nfs-fps.duckdns.org/admin`; la clave se guarda
+  hasheada en `NFS_WEB_ADMIN_PASSWORD_HASH` dentro de
+  `/opt/nfs-online/env/web.env`.
+- Invitaciones: el panel lista el código, usos, vencimiento y estado;
+  permite crear y revocar. El código se guarda en la SQLite para poder
+  consultarlo después (además del hash).
 - Runbook: `docs/deployment.md`.
 
 ## Automatización del juego en Windows

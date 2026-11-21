@@ -99,6 +99,13 @@ crean y revocan invitaciones, se listan cuentas y se puede resetear
 la contraseña de un jugador. El código de invitación se guarda en la
 SQLite para poder consultarlo después.
 
+`NFS_WEB_ADMIN_PASSWORD_HASH` es **solo la semilla inicial**. Cuando se
+cambia la clave desde `/admin`, la SQLite
+(`web_admin_credentials.password_hash`) pasa a mandar y el valor de
+`web.env` queda viejo. Si se olvida la clave, se puede restaurar la
+semilla sobrescribiendo esa fila con el hash de `web.env`, o borrando la
+fila y reiniciando `nfs-web` para que la vuelva a sembrar.
+
 Comprobar:
 
 ```bash

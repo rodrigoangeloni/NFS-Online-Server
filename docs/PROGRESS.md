@@ -411,6 +411,9 @@ especificado no es válido” y el servidor no registraba ningún intento;
 - Suite: `python -m pytest web/tests -q` → **53 passed**.
 - En el Debian se borró la cuenta de prueba de 16 caracteres; backup en
   `data/backups/accounts-before-delete-*.sqlite3`.
+- La clave de admin se había cambiado desde el panel a las 22:28 UTC y
+  no se recordaba. Se restauró el hash semilla de `web.env`
+  (`<clave-admin>`) y se verificó con `POST /api/admin/login` → 200.
 
 ## Verificación actual
 

@@ -99,6 +99,7 @@ Levantar la web:
 ```bash
 cd /opt/nfs-online/repo
 NFS_UID=1000 NFS_GID=1000 \
+NFS_WEB_BIND_IP=192.0.2.200 \
 NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org \
 NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org \
 NFS_WEB_INVITE_REQUIRED=1 \
@@ -109,7 +110,7 @@ docker compose -f docker/compose.web.yml up -d --build
 Verificar desde el host:
 
 ```bash
-curl -fsS http://127.0.0.1:8096/healthz
+curl -fsS http://192.0.2.200:8096/healthz
 ```
 
 ## 6. NPM
@@ -118,15 +119,16 @@ Crear un **Proxy Host**:
 
 - Domain Names: `nfs-fps.duckdns.org`
 - Scheme: `http`
-- Forward Hostname/IP: `nfs-web`
-- Forward Port: `8080`
+- Forward Hostname/IP: `192.0.2.200`
+- Forward Port: `8096`
 - Block Common Exploits: sí
 - Websockets Support: no hace falta
 - SSL: Request a new certificate, Force SSL, HTTP/2
 - Access List: ninguna (el sitio es público)
 
-`nfs-web` está conectado a `nginx-proxy-manager-new_default`; no usar
-`127.0.0.1` dentro de NPM.
+También se puede usar `nfs-web` y puerto `8080` si NPM y la web
+comparten `nginx-proxy-manager-new_default`; esta instalación usa
+`192.0.2.200:8096` para seguir el patrón de los otros proxy hosts.
 
 ## 7. Firewall UFW
 

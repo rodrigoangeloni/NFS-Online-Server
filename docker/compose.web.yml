@@ -21,7 +21,7 @@ services:
       NFS_WEB_ALLOW_INSECURE: ${NFS_WEB_ALLOW_INSECURE:-1}
       NFS_WEB_TRUSTED_PROXY_IPS: ${NFS_WEB_TRUSTED_PROXY_IPS:-}
     ports:
-      - "127.0.0.1:8096:8080"
+      - "${NFS_WEB_BIND_IP:-127.0.0.1}:8096:8080"
     volumes:
       - ../data:/app/data
       - ../runtime:/app/runtime:ro

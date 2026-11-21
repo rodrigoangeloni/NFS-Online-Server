@@ -220,12 +220,11 @@ Internet.
 
 ```bash
 cd /opt/nfs-online/repo
-git fetch --all
-git switch main
-git pull --ff-only
-sudo systemctl restart nfs-online.service
-docker compose -f docker/compose.web.yml up -d --build
+./deploy/update.sh
 ```
+
+El script hace `git pull --ff-only`, valida la configuración, reinicia
+`nfs-online.service`, reconstruye la web y verifica `/healthz`.
 
 Antes de actualizar, backup:
 

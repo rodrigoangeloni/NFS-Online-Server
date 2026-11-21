@@ -225,6 +225,8 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   `artifacts/downloads/`, `env/nfs.env`.
 - Juego: contenedor `nfs-server` (UID 1000, DNS `1.1.1.1`), anuncia
   `nfs-fps.duckdns.org` y `<IP publica>`; systemd deshabilitado.
+- Stack: `nfs-online` con `nfs-server` + `nfs-web`; en Portainer se ven
+  en **Containers** (proyecto `nfs-online`).
 - Web: contenedor `nfs-web`, loopback `127.0.0.1:8096`, red
   `nginx-proxy-manager-new_default` como `nfs-web:8080`.
 - NPM: `nfs-fps.duckdns.org` → `http://nfs-web:8080`, Force SSL y HTTP/2.

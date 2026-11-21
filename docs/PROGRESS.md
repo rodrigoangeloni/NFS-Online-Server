@@ -301,6 +301,11 @@ Se desplegó el servidor en `debian-server` (`192.0.2.200`, público
   - Puertos: TCP `13505`, `20921-20923`, `30920-30921`; UDP
     `20000-20005`.
 - Repo Debian: clon git de `main`; actualización con `deploy/update.sh`.
+- Stack Docker `nfs-online`: `nfs-server` + `nfs-web`; systemd
+  deshabilitado. Portainer los muestra en **Containers**.
+- El DNS del router es split-horizon: devuelve `192.0.2.200` para
+  `nfs-fps`; `1.1.1.1`/`8.8.8.8` devuelven `<IP publica>`. Por eso
+  `nfs-server` usa `dns: 1.1.1.1` y anuncia la IP pública.
 - UFW: reglas para los puertos de juego; `8096` no se abre.
 - Web:
   - Contenedor `nfs-web`, `127.0.0.1:8096->8080/tcp`, usuario UID 1000.

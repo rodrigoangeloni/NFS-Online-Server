@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080a08">
+  <meta name="description" content="Servidor comunitario de Need for Speed Underground 2 y Most Wanted. Cuentas, descargas y salas en vivo.">
+  <title>NFS Online — Underground 2 &amp; Most Wanted</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="landing">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="NFS Online, inicio">
+      <span class="brand-mark">NFS</span>
+      <span class="brand-word">ONLINE</span>
+    </a>
+    <nav class="topnav" aria-label="Principal">
+      <a href="#estado">Estado</a>
+      <a href="#descargas">Descargas</a>
+      <a href="#como-entrar">Cómo entrar</a>
+      <a href="/account">Cuenta</a>
+    </nav>
+    <a class="btn btn-small btn-ghost" href="/account">Crear cuenta</a>
+  </header>
+
+  <main id="contenido">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse"></span> Servidor comunitario · Temporada 01</p>
+        <h1>
+          <span class="hero-kicker">Need for Speed</span>
+          <span class="hero-title">Online</span>
+        </h1>
+        <p class="hero-lead">
+          Underground 2 y Most Wanted vuelven a la calle. Creá tu cuenta,
+          descargá el cliente listo para jugar y entrá a la sala.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/account">Crear mi cuenta</a>
+          <a class="btn" href="#descargas">Descargar cliente</a>
+        </div>
+        <p class="hero-note">
+          Sin instalar nada raro: el paquete trae el cliente online y el fix
+          de pantalla borderless.
+        </p>
+      </div>
+
+      <aside class="hero-board" aria-label="Resumen del servidor">
+        <div class="board-head">
+          <span class="board-label">SERVER FEED</span>
+          <span id="connectionChip" class="chip chip-wait">conectando</span>
+        </div>
+        <div class="board-stat">
+          <span class="board-number" id="totalPlayers">—</span>
+          <span class="board-caption">jugadores en línea</span>
+        </div>
+        <div class="board-row">
+          <div>
+            <span class="board-number board-number-small" id="roomCount">—</span>
+            <span class="board-caption">salas abiertas</span>
+          </div>
+          <div>
+            <span class="board-number board-number-small" id="playerCount">—</span>
+            <span class="board-caption">personas</span>
+          </div>
+        </div>
+        <div class="board-address">
+          <span class="board-label">DIRECCIÓN</span>
+          <div class="address-line">
+            <code id="serverAddress">cargando…</code>
+            <button class="icon-btn" id="copyServerAddress" type="button" aria-label="Copiar dirección del servidor">COPIAR</button>
+          </div>
+        </div>
+        <p class="board-updated">Actualizado <span id="updatedAt">—</span></p>
+      </aside>
+    </section>
+
+    <section id="estado" class="section" aria-labelledby="estado-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">En vivo</p>
+          <h2 id="estado-title">La calle ahora</h2>
+        </div>
+        <p class="section-note">Se actualiza cada 10 segundos.</p>
+      </div>
+      <p id="connectionWarning" class="warning" hidden>No se pudo leer el estado del servidor. Probá recargar.</p>
+      <div id="serverGrid" class="status-grid" aria-live="polite"></div>
+      <div id="roomGrid" class="room-grid" aria-live="polite"></div>
+      <div id="playerList" class="player-list" aria-live="polite"></div>
+    </section>
+
+    <section id="descargas" class="section section-downloads" aria-labelledby="descargas-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Pit stop</p>
+          <h2 id="descargas-title">Descargas</h2>
+        </div>
+        <p class="section-note" id="downloadSummary">Preparando paquetes…</p>
+      </div>
+      <div id="downloadGrid" class="download-grid" aria-live="polite"></div>
+      <div class="fix-banner">
+        <span class="fix-tag">FIX INCLUIDO</span>
+        <div>
+          <strong>Pantalla completa sin bordes.</strong>
+          El paquete ya trae el fix de pantalla en modo borderless: se ve
+          fullscreen, sin la barra de Windows, y con la intro salteada.
+        </div>
+      </div>
+    </section>
+
+    <section id="como-entrar" class="section steps" aria-labelledby="pasos-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Arranque</p>
+          <h2 id="pasos-title">Cómo entrar</h2>
+        </div>
+      </div>
+      <ol class="step-list">
+        <li>
+          <span class="step-number">01</span>
+          <div>
+            <h3>Creá la cuenta</h3>
+            <p>Necesitás un nombre, una persona y una contraseña. La cuenta es la misma para la web y para el juego.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-number">02</span>
+          <div>
+            <h3>Descargá e instalá</h3>
+            <p>Descomprimí el ZIP y ejecutá <code>INSTALAR.bat</code>. El instalador busca el juego solo; si no lo encuentra, te pide la carpeta.</p>
+          </div>
+        </li>
+        <li>
+          <span class="step-number">03</span>
+          <div>
+            <h3>Entrá al juego</h3>
+            <p>Abrí U2 o MW, iniciá sesión con la misma cuenta y buscá la sala en Online. El servidor ya está configurado en el paquete.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <span class="brand-mark">NFS</span>
+      <span class="brand-word">ONLINE</span>
+    </div>
+    <p>Servidor comunitario sin fines de lucro. Need for Speed es una marca de Electronic Arts; este sitio no está afiliado a EA.</p>
+    <p class="footer-meta">nfs-fps.duckdns.org · Underground 2 / Most Wanted</p>
+  </footer>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

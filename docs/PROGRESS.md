@@ -16,7 +16,7 @@
 | Clientes | Compilados y copiados a las carpetas de U2/MW |
 | Login real | MW y U2 verificados (auth, persona, Messenger y sala) |
 | Web `web/` | MVP implementado en `feat/web-mvp`: registro, login, sesiones, descargas y landing |
-| Debian/NPM/DuckDNS | Pendiente de desplegar |
+| Debian/NPM/DuckDNS | Desplegado; `duckdns-nfs` actualiza `nfs-fps` |
 
 ## Protocolo de trabajo
 
@@ -306,6 +306,10 @@ Se desplegó el servidor en `debian-server` (`192.0.2.200`, público
 - El DNS del router es split-horizon: devuelve `192.0.2.200` para
   `nfs-fps`; `1.1.1.1`/`8.8.8.8` devuelven `<IP publica>`. Por eso
   `nfs-server` usa `dns: 1.1.1.1` y anuncia la IP pública.
+- DuckDNS: `duckdns` actualiza `nextcloud-<usuario>`; `duckdns-nfs` actualiza
+  `nfs-fps` con el token de esa cuenta. Token en
+  `/opt/nfs-online/env/duckdns-nfs.env` (chmod 600, no versionado).
+- Log de `duckdns-nfs`: `DuckDNS request ... successful. IP(s) unchanged.`
 - UFW: reglas para los puertos de juego; `8096` no se abre.
 - Web:
   - Contenedor `nfs-web`, `127.0.0.1:8096->8080/tcp`, usuario UID 1000.

@@ -231,6 +231,10 @@ sqlite3 /opt/nfs-online/repo/data/accounts.sqlite3 \
 La imagen de LinuxServer usa **un token por contenedor**. El contenedor
 `duckdns` existente actualiza `nextcloud-<usuario>`; no hay que reemplazarlo.
 
+En este servidor ya está corriendo `duckdns-nfs` para `nfs-fps` con el
+token de su cuenta. El token vive en
+`/opt/nfs-online/env/duckdns-nfs.env` (chmod 600, no versionado).
+
 Para `nfs-fps` (otra cuenta DuckDNS):
 
 ```bash

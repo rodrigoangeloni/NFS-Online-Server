@@ -287,6 +287,41 @@ Resultado: registro, descarga, instalación, login, sala y carrera de dos jugado
 funcionando por LAN. No hubo errores nuevos en el servidor; los `disk I/O error`
 del log son de la prueba anterior con la web en Windows.
 
+## Hito: despliegue público en Debian (2026-11-21)
+
+Se desplegó el servidor en `debian-server` (`192.0.2.200`, público
+`<IP publica>`).
+
+- Código en `/opt/nfs-online/repo`; datos, runtime, logs, backups,
+  env y descargas bajo `/opt/nfs-online/`.
+- Juego nativo con `nfs-online.service`:
+  - `systemctl status nfs-online` → `active (exited)`.
+  - Log: `Public host: nfs-fps.duckdns.org`, IPv4 `<IP publica>`,
+    local `192.0.2.200`.
+  - Puertos: TCP `13505`, `20921-20923`, `30920-30921`; UDP
+    `20000-20005`.
+- UFW: reglas para los puertos de juego; `8096` no se abre.
+- Web:
+  - Contenedor `nfs-web`, `127.0.0.1:8096->8080/tcp`, usuario UID 1000.
+  - Conectado a `nginx-proxy-manager-new_default`.
+  - NPM: `nfs-fps.duckdns.org` → `http://nfs-web:8080`, Force SSL,
+    HTTP/2; certificado Let's Encrypt.
+- Verificación pública:
+  - `https://nfs-fps.duckdns.org/healthz` → `{"ok":true}`.
+  - `GET /`, `/account`, `/api/connect` → 200.
+  - Descarga U2 por HTTPS: 6.104.050 bytes, SHA-256 igual al manifest.
+  - Registro con invitación por HTTPS → cuenta y `/me` autenticados.
+  - HTTP `80` → `301` a HTTPS.
+  - `http://nfs-fps.duckdns.org:8096` → timeout desde Internet (loopback).
+- TCP de juego verificados desde Internet con `webfetch`:
+  - `20921`, `20922`, `30920`, `30921` responden con el protocolo del
+    juego (transport error esperado al pedir HTTP).
+  - `20923` responde `404` (endpoint HTTP de noticias/PREL).
+  - `13505` responde `404` (Messenger/PREL).
+- Pendiente: carrera completa desde una conexión externa para confirmar
+  el relay UDP `20000-20005`.
+- Invitación de prueba creada en la SQLite del Debian (no versionada).
+
 ## Verificación actual
 
 - Servidor:

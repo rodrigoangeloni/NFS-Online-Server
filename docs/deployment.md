@@ -99,7 +99,6 @@ Levantar la web:
 ```bash
 cd /opt/nfs-online/repo
 NFS_UID=1000 NFS_GID=1000 \
-NFS_WEB_BIND_IP=192.0.2.200 \
 NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org \
 NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org \
 NFS_WEB_INVITE_REQUIRED=1 \
@@ -107,10 +106,11 @@ NFS_DOWNLOADS_DIR=/opt/nfs-online/artifacts/downloads \
 docker compose -f docker/compose.web.yml up -d --build
 ```
 
-Verificar desde el host:
+La web escucha en `127.0.0.1:8096` y en la red Docker de NPM como
+`nfs-web:8080`. Verificar desde el host:
 
 ```bash
-curl -fsS http://192.0.2.200:8096/healthz
+curl -fsS http://127.0.0.1:8096/healthz
 ```
 
 ## 6. NPM
@@ -119,16 +119,17 @@ Crear un **Proxy Host**:
 
 - Domain Names: `nfs-fps.duckdns.org`
 - Scheme: `http`
-- Forward Hostname/IP: `192.0.2.200`
-- Forward Port: `8096`
+- Forward Hostname/IP: `nfs-web`
+- Forward Port: `8080`
 - Block Common Exploits: sí
-- Websockets Support: no hace falta
-- SSL: Request a new certificate, Force SSL, HTTP/2
+- Force SSL: sí
+- HTTP/2 Support: sí
 - Access List: ninguna (el sitio es público)
 
-También se puede usar `nfs-web` y puerto `8080` si NPM y la web
-comparten `nginx-proxy-manager-new_default`; esta instalación usa
-`192.0.2.200:8096` para seguir el patrón de los otros proxy hosts.
+`nfs-web` está conectado a `nginx-proxy-manager-new_default`; NPM lo
+resuelve por DNS de Docker y usa el puerto interno `8080`. No usar
+`192.0.2.200:8096`: ese puerto queda solo en loopback para
+diagnóstico y no debe publicarse.
 
 ## 7. Firewall UFW
 
@@ -142,6 +143,8 @@ sudo ufw status numbered
 ```
 
 No abrir `8096`: solo escucha en loopback y NPM llega por la red Docker.
+Si el router reenvía todo (DMZ), el bind loopback es lo que impide que
+`8096` quede público.
 
 ## 8. Invitaciones y registro
 

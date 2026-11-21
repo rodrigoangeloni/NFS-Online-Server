@@ -47,9 +47,11 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Web levantada en LAN (`http://192.0.2.37:8096`) dentro de Docker.
 - [x] Registro, descarga e instalación desde la otra PC de la LAN verificados.
 - [x] Sala U2 `016.TestDriver` con 2 jugadores (`DriverD`, `TestDriver`) y carrera sincronizada.
+- [x] Debian desplegado: systemd para el juego, web Docker, NPM y HTTPS público.
+- [x] `https://nfs-fps.duckdns.org` sirve landing, cuenta, descargas y registro con invitación.
+- [ ] Probar una partida completa desde fuera de la LAN (UDP `20000-20005`).
 - [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
 - [ ] Completar web: estado en vivo completo, leaderboards, noticias/TOS y admin.
-- [ ] Despliegue en Debian + NPM + DuckDNS.
 - [ ] Fase 1b: Carbon.
 
 ## Artefactos locales (esta PC)
@@ -213,6 +215,23 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   licencias, loader y Widescreen Fix en `WindowedMode = 1`.
 - Detalle: `docs/local-testing.md`.
 
+## Producción en Debian
+
+- Ruta: `/opt/nfs-online/repo` (código), `data/`, `runtime/`, `logs/`,
+  `artifacts/downloads/`, `env/nfs.env`.
+- Juego: `nfs-online.service` (systemd, `User=<usuario>`), anuncia
+  `nfs-fps.duckdns.org` y `<IP publica>`.
+- Web: contenedor `nfs-web`, loopback `127.0.0.1:8096`, red
+  `nginx-proxy-manager-new_default` como `nfs-web:8080`.
+- NPM: `nfs-fps.duckdns.org` → `http://nfs-web:8080`, Force SSL y HTTP/2.
+- HTTPS público verificado: `/healthz`, landing, `/account`, `/api/connect`
+  y descarga con SHA-256 correcto.
+- UFW: abiertos TCP `13505`, `20921-20923`, `30920-30921` y UDP
+  `20000-20005`; `8096` queda en loopback.
+- TCP de juego verificados desde Internet; falta la prueba de carrera
+  externa para confirmar UDP.
+- Runbook: `docs/deployment.md`.
+
 ## Automatización del juego en Windows
 
 El juego ignora la entrada sintética si la ventana no está en primer plano. La secuencia que funcionó:
@@ -236,7 +255,8 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 - Los juegos son repacks de ElAmigos. Si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir. Si el cliente no engancha, probar con un ejecutable original 1.2/1.3.
 - Docker Desktop no reproduce exactamente el host networking de Linux; la validación final es en el Debian.
 - La web NFS corre en Docker y comparte `data/accounts.sqlite3` con el servidor. No ejecutar `uvicorn` en Windows contra esa base mientras el contenedor está activo: aparecen `disk I/O error`.
-- El puerto `8080` lo usa NFS World; Assetto ocupa `8081-8088`; la web NFS usa `8096`.
+- El puerto `8080` lo usa NFS World; Assetto ocupa `8081-8088`; la web NFS usa `8096` en loopback.
+- En Debian, NPM debe apuntar a `nfs-web:8080` (red Docker), no a `192.0.2.200:8096`. El bind loopback es lo que evita exponer la web sin TLS.
 - Para LAN, el servidor debe arrancar con `NFS_PUBLIC_HOST=192.0.2.37` y `NFS_LOCAL_IPV4=192.0.2.37`; si no, anuncia `127.0.0.1` y el cliente remoto no encuentra el lobby.
 
 ## Próximo paso

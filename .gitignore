@@ -1,3 +1,6 @@
+# Local agent scratch (plan ledgers and review packages)
+/.superpowers/
+
 # Python
 __pycache__/
 *.py[cod]

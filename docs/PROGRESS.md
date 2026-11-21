@@ -18,6 +18,14 @@
 | Web `web/` | Pendiente de implementar |
 | Debian/NPM/DuckDNS | Pendiente de desplegar |
 
+## Protocolo de trabajo
+
+Cada paso sigue el ciclo definido en `AGENTS.md`:
+
+1. Prueba (unitaria, integración, Docker, navegador o juego).
+2. Registro del comando y resultado en este archivo.
+3. Commit detallado con el alcance y las pruebas ejecutadas.
+
 ## Cronología
 
 ### 2026-11-21

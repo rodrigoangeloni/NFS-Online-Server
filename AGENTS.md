@@ -129,6 +129,33 @@ El script descarga Zig en `.tools/` y luego `check_source.py` puede fallar al es
 
 El `file` final del script no es necesario; el audit PE (`tools/audit_pe.py`) sí debe pasar.
 
+## Protocolo de pruebas y commits
+
+Cada cambio debe seguir este ciclo:
+
+1. **Test primero cuando aplique:** unitario o de integración antes de la implementación.
+2. **Ejecutar la prueba** y guardar el comando y el resultado.
+3. **Documentar** el resultado en `docs/PROGRESS.md` (qué se probó, resultado, limitaciones).
+4. **Commit detallado** con cuerpo: qué cambió, qué tests se corrieron y qué queda pendiente.
+
+Matriz de pruebas:
+
+| Nivel | Herramienta | Alcance |
+|---|---|---|
+| Unitario | `pytest` | Servicios web, cuentas, descargas, leaderboards, empaquetado |
+| Integración | `pytest` + `TestClient` + SQLite temporal | API, sesiones, CSRF, registro/login |
+| Docker | `docker compose`, `docker exec`, logs, puertos | Servidor U2/MW, persistencia, reinicio |
+| Navegador | Playwright / browser | Landing, registro, cuenta, leaderboards, admin |
+| Juego | Lanzar U2/MW + `native-devtools` si hace falta | Login, lobby, sala visible en logs/status |
+| Árbol público | `git archive HEAD` + `tools/check_public_tree.py` | Que no se versionen binarios ni datos |
+
+Reglas:
+
+- No commitear `data/`, `runtime/`, `logs/`, `__pycache__`, binarios, ZIPs, ISOs ni credenciales.
+- Para el juego, la fuente de verdad son `logs/classic.log`, `runtime/classic-status.json` y `net_u2.log`/`net_mw.log`; la automatización de escritorio es solo un medio.
+- Si una prueba del juego requiere tomar mouse/teclado, pedir confirmación antes.
+- Un commit por paso lógico, con mensaje `tipo(scope): resumen` y cuerpo con tests y resultados.
+
 ## Problemas conocidos
 
 - `python nfs_online.py status` falla en Windows con `OSError: [WinError 87]` en `os.kill(pid, 0)`. Usar `docker exec nfs-server-dev python nfs_online.py status`.

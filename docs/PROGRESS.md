@@ -64,6 +64,8 @@
 | `d130c9e` | `chore(repo): keep game media and local artifacts out of git` |
 | `b7ea59e` | `docs(plan): document self-host architecture and U2/MW rollout` |
 | `84bcced` | `feat(dev): run U2/MW server in Docker Desktop` |
+| `c8e40c9` | `docs(progress): record local U2/MW setup and next steps` |
+| `954078c` | `docs(progress): verify public tree from committed archive` |
 
 Este documento y `AGENTS.md` forman parte de este mismo commit.
 

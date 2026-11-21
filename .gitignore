@@ -78,6 +78,14 @@ clients/**/*.obj
 *.zip
 *.sha256
 
+# Game installation media -- never commit
+*.iso
+*.bin
+*.cue
+
+# Locally generated client downloads and vendor binaries
+/artifacts/
+
 # Local protocol experiments retained for development, not part of the release.
 /INTEGRARE_SERVER.md
 /server/carbon/original_host/caddy_stage.py

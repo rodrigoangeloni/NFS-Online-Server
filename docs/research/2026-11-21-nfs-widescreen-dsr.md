@@ -124,10 +124,50 @@ Si el fix no carga con nuestro loader, usar el `dinput8.dll` del pack (es el mis
 6. Probar login U2/MW y creación de sala.
 7. Documentar resultados y dejar un ZIP/instalador para amigos con la configuración elegida.
 
+## Resultado de la prueba (2026-11-21)
+
+Instalado en U2/MW:
+
+- Solo se copió la carpeta `scripts/` de cada release.
+- **No se reemplazó** el `dinput8.dll` actual; el ASI Loader existente cargó el Widescreen Fix.
+- Configuración inicial: `WindowedMode = 3`, `SkipIntro = 1`; en U2 `NoOpticalDriveFix = 1`.
+
+U2:
+
+- Arrancó en una ventana con borde de **1922x1093** en un monitor 1920x1080 (`WindowedMode = 3`).
+- El fix cargó: HUD/FOV corregidos y ventana redimensionable.
+- En `Opciones → Pantalla → Resolución` apareció **1920x1080**; al avanzar apareció **2560x1440**.
+- Al aplicar **2560x1440**, la ventana creció a **2562x1093** (más grande que el monitor), confirmando que el fix expone la resolución DSR.
+- Se volvió a 1920x1080 para seguir probando.
+- El juego no crasheó con `net_u2.asi` + Widescreen Fix cargados.
+
+### Modo borderless (`WindowedMode = 1`)
+
+Segunda prueba en U2, con `WindowedMode = 1`:
+
+- El juego abrió en una ventana **sin bordes de 1920x1080 en (0,0)**, cubriendo toda la pantalla y **tapando la barra de tareas de Windows**.
+- Sigue siendo una ventana: se puede alt-tab y el fix mantiene HUD/FOV.
+- `Win+Shift+Left/Right` **no la movió**: el juego captura/bloquea la tecla Windows. El movimiento entre monitores no está disponible con ese atajo.
+- Un `SetWindowPos` externo sí la movió al monitor secundario y el juego siguió renderizando; para el usuario final haría falta un launcher o un helper de hotkeys que la reposicione.
+
+Conclusión práctica:
+
+- **`WindowedMode = 1`**: se ve como fullscreen, sin barra de Windows, pero queda atada al monitor donde abre.
+- **`WindowedMode = 3`**: se puede arrastrar/redimensionar entre monitores, pero muestra el borde y la barra de tareas.
+- Si se quiere priorizar “sin barra de Windows”, usar `WindowedMode = 1`; si se quiere mover entre monitores, usar `3` o agregar un launcher que ubique la ventana en el monitor elegido.
+
+Pendiente de esta prueba:
+
+- Confirmar que `WindowedMode = 1` abre igual en cada lanzamiento (una segunda ejecución).
+- Repetir login online con el fix cargado.
+- Probar DSR en fullscreen (`WindowedMode = 0`) para confirmar el downsample del driver.
+- Repetir la prueba en Most Wanted.
+
 ## Riesgos
 
 - El fix espera versiones concretas del ejecutable; los repacks pueden no coincidir.
 - DSR en ventana/borderless no es equivalente a DSR en fullscreen.
+- `WindowedMode = 3` a una resolución mayor que el monitor genera una ventana más grande que la pantalla; para DSR usar fullscreen.
 - Un `dinput8.dll` duplicado o incompatible puede impedir que carguen los `.asi`.
 - Si el fix y el cliente online parchean la misma zona, podría haber crash; se detecta en la prueba de login.
 - Los archivos del fix son binarios de terceros: se guardan fuera del repo, en `NFS-Online-Artifacts`, y se distribuyen con su licencia/atribución si se empaquetan.

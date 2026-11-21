@@ -39,6 +39,9 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Login real de **MW** verificado: `auth result=ok`, persona `TestDriver`, Messenger autenticado y sala creada.
 - [x] Login real de **U2** verificado: `auth result=ok`, `pers result=ok`, Messenger `underground2-classic-messenger` y sala `017.TestDriver` creada.
 - [x] `runtime/classic-status.json` publica la sala de U2 (`players=1`, `capacity=6`, `state=OPEN`).
+- [x] Widescreen Fix instalado en U2/MW (solo `scripts/`; el `dinput8.dll` actual no se tocó).
+- [x] U2 probado en ventana 1920x1080 (`WindowedMode=3`) y con resolución DSR 2560x1440.
+- [ ] Login online después del Widescreen Fix, prueba en MW y DSR en fullscreen.
 - [ ] Probar la sala con un segundo jugador/cuenta.
 - [ ] Implementación de `web/` (registro, landing, leaderboards, admin).
 - [ ] Despliegue en Debian + NPM + DuckDNS.
@@ -158,6 +161,17 @@ Reglas:
 - Para el juego, la fuente de verdad son `logs/classic.log`, `runtime/classic-status.json` y `net_u2.log`/`net_mw.log`; la automatización de escritorio es solo un medio.
 - Si una prueba del juego requiere tomar mouse/teclado, pedir confirmación antes.
 - Un commit por paso lógico, con mensaje `tipo(scope): resumen` y cuerpo con tests y resultados.
+
+## Widescreen Fix (U2/MW)
+
+- Instalado en `scripts/` de cada juego; solo se copiaron `.asi`, `.ini` y `.dat`/`.tpk`.
+- **No** se reemplazó el `dinput8.dll` actual.
+- U2 `NFSUnderground2.WidescreenFix.ini`: `WindowedMode = 1`, `SkipIntro = 1`, `NoOpticalDriveFix = 1`.
+- MW `NFSMostWanted.WidescreenFix.ini`: `WindowedMode = 3`, `SkipIntro = 1`.
+- Resultado U2: `WindowedMode = 1` abre borderless 1920x1080 en (0,0) y tapa la barra de tareas; la lista de resolución incluye 2560x1440 (DSR) y se aplicó.
+- `Win+Shift+Left/Right` no mueve la ventana borderless porque el juego captura la tecla Windows; `WindowedMode = 3` sí se puede arrastrar pero muestra borde y barra de tareas.
+- Para multi-monitor: `WindowedMode = 3`; para DSR: `WindowedMode = 0` + resolución DSR.
+- Detalle y fuentes: `docs/research/2026-11-21-nfs-widescreen-dsr.md`.
 
 ## Automatización del juego en Windows
 

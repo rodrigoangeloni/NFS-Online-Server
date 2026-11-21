@@ -112,3 +112,8 @@ clients/**/*.obj
 /server/carbon/tests/test_python_race_stream.py
 /server/carbon/tests/test_python_race_virtual.py
 /server/carbon/tests/test_python_virtual_stream.py
+
+# Playwright scratch
+/.playwright-mcp/
+*-check.png
+

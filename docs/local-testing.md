@@ -28,16 +28,29 @@ El resultado es:
 
 ## Levantar la web
 
+La forma recomendada es el contenedor, para que la web y el servidor accedan a
+la misma SQLite a través de Docker y no se mezclen escrituras del host con el
+contenedor (eso produce `disk I/O error`).
+
 ```powershell
-.\tools\run_web.ps1 -PublicHost 192.0.2.37 -Port 8080
+$env:NFS_PUBLIC_HOST = "192.0.2.37"
+$env:NFS_LOCAL_IPV4 = "192.0.2.37"
+$env:NFS_WEB_PUBLIC_HOST = "192.0.2.37"
+$env:NFS_WEB_SITE_URL = "http://192.0.2.37:8081"
+$env:NFS_WEB_INVITE_REQUIRED = "0"
+$env:NFS_DOWNLOADS_DIR = "E:/vscode-workspace/NFS-Online-Artifacts/downloads"
+
+docker compose -f docker/compose.dev.yml up -d --build nfs-web
 ```
 
-Abrir `http://192.0.2.37:8080` desde esta PC o desde otra PC de la LAN.
+Abrir `http://192.0.2.37:8081` desde esta PC o desde otra PC de la LAN.
 
-- Registro abierto por defecto en la prueba LAN.
-- Para exigir invitación: `.\tools\run_web.ps1 -InviteRequired` y crear un código con
-  la herramienta de administración cuando esté implementada.
+- El puerto **8081** se usa porque `sbrw-core` ya ocupa el 8080 en esta PC.
+- Registro abierto con `NFS_WEB_INVITE_REQUIRED=0`; en producción debe quedar en `1`.
 - La web escribe en la misma `data/accounts.sqlite3` que el servidor de juego.
+- `tools/run_web.ps1` sirve para trabajar solo en la interfaz; no lo uses contra
+  la base viva mientras el servidor está corriendo, porque el acceso desde
+  Windows y desde el contenedor rompe el WAL de SQLite.
 
 ## Probar registro y descarga
 
@@ -49,12 +62,15 @@ Abrir `http://192.0.2.37:8080` desde esta PC o desde otra PC de la LAN.
 
 ## Puertos del juego
 
-La web usa `8080`. El servidor de juego usa:
+La web usa `8081`. El servidor de juego usa:
 
 - TCP `13505`, `20921`, `20922`, `20923`, `30920`, `30921`.
 - UDP `20000` (relay de carreras).
 
-En Docker Desktop los puertos publicados pueden quedar ligados a `127.0.0.1`.
-Para que otra PC de la LAN pueda entrar al juego hay que publicarlos en
-`0.0.0.0` y reiniciar el stack. Esto todavía no se cambió para no cortar la
-sesión de prueba actual.
+En Docker Desktop los puertos publicados se ven en `0.0.0.0` y el servidor
+anuncia la IP configurada en `NFS_PUBLIC_HOST`. El stack actual ya se levantó
+con `NFS_PUBLIC_HOST=192.0.2.37`, así que el cliente de la otra PC debe
+usar esa dirección (el paquete descargado ya la trae configurada).
+
+Si el otro jugador no puede entrar, revisar firewall de Windows para los
+puertos TCP `13505`, `20921-20923`, `30920-30921` y UDP `20000-20005`.

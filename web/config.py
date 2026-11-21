@@ -83,6 +83,9 @@ def load_settings(environ: Mapping[str, str] | None = None) -> WebSettings:
     games = normalize_games(games_value)
 
     downloads_default = REPO_ROOT.parent / "artifacts" / "downloads"
+    sibling_downloads = REPO_ROOT.parent / "NFS-Online-Artifacts" / "downloads"
+    if not downloads_default.is_dir() and sibling_downloads.is_dir():
+        downloads_default = sibling_downloads
     downloads_dir = Path(
         _env(env, "NFS_WEB_DOWNLOADS_DIR", str(downloads_default))
     ).expanduser().resolve()

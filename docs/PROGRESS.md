@@ -78,7 +78,8 @@ Este documento y `AGENTS.md` forman parte de este mismo commit.
   - `dinput8.dll` idéntico en U2/MW.
   - `net_u2.ini` y `net_mw.ini` con `host = 127.0.0.1`.
 - Repo:
-  - `python tools/check_public_tree.py` → OK.
+  - Working tree: el checker ve `data/accounts.sqlite3`, `data/server-state.json`, `runtime/*.json`, `logs/*.log` y `__pycache__` del test local (ignorados por git).
+  - Árbol commiteado: `git archive HEAD` + checker → OK.
   - Sin `.iso`, `.asi`, `.dll` ni `.zip` versionados.
 
 ## Pendiente inmediato
@@ -98,7 +99,11 @@ docker compose -f docker/compose.dev.yml up -d --build
 docker exec nfs-server-dev python nfs_online.py status
 Get-Content logs\classic.log -Tail 80
 docker compose -f docker/compose.dev.yml down
-python tools/check_public_tree.py
+
+# Verificar solo el árbol commiteado (sin runtime/data/logs locales)
+git archive HEAD --format=zip -o "$env:TEMP\nfs-clean.zip"
+Expand-Archive "$env:TEMP\nfs-clean.zip" "$env:TEMP\nfs-clean" -Force
+python tools/check_public_tree.py "$env:TEMP\nfs-clean"
 ```
 
 ## Riesgos conocidos

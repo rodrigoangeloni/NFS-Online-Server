@@ -1042,7 +1042,7 @@ git commit -m "chore(deploy): add backups and update scripts"
 
 - `python -m pytest web/tests tests/test_package_clients.py -q` en verde.
 - `python nfs_online.py check` en verde.
-- `python tools/check_public_tree.py` en verde (sin binarios ni ZIP versionados).
+- `python tools/check_public_tree.py` en verde sobre un clon limpio o `git archive HEAD` (el working tree con `runtime/`, `data/`, `logs/` y `__pycache__` locales no cuenta).
 - `docker compose -f docker/compose.dev.yml up --build` levanta U2/MW + web y el registro funciona en `http://localhost:8080`.
 - `dig +short nfs-fps.duckdns.org` devuelve la IP pública.
 - `https://nfs-fps.duckdns.org/healthz` responde `{"ok":true}`.

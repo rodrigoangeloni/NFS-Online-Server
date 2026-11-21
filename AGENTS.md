@@ -35,6 +35,7 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Stack local `nfs-server` en Docker Desktop con U2/MW.
 - [x] Cuenta local de prueba `TestDriver` creada (contraseña definida localmente, no versionada).
 - [x] Clientes instalados en las carpetas de U2/MW con UAC; hashes verificados.
+- [x] El árbol commiteado pasa `tools/check_public_tree.py`.
 - [ ] Login real de U2/MW contra el servidor local.
 - [ ] Implementación de `web/` (registro, landing, leaderboards, admin).
 - [ ] Despliegue en Debian + NPM + DuckDNS.
@@ -100,8 +101,12 @@ Get-Content logs\classic.log -Tail 80
 # Apagar
 docker compose -f docker/compose.dev.yml down
 
-# Verificación del árbol público
-python tools/check_public_tree.py
+# Verificación del árbol público.
+# El checker recorre el filesystem, no git: con el stack local corriendo
+# también ve data/, runtime/, logs/ y __pycache__. Verificar sobre lo commiteado:
+git archive HEAD --format=zip -o "$env:TEMP\nfs-clean.zip"
+Expand-Archive "$env:TEMP\nfs-clean.zip" "$env:TEMP\nfs-clean" -Force
+python tools/check_public_tree.py "$env:TEMP\nfs-clean"
 ```
 
 No ejecutar `python nfs_online.py stop` en Windows mientras el stack Docker está activo: el `runtime/services.json` contiene PIDs del contenedor y el launcher de Windows puede interpretarlos mal. Usar `docker compose down`.

@@ -16,6 +16,7 @@ services:
       NFS_WEB_SITE_URL: ${NFS_WEB_SITE_URL:-https://nfs-fps.duckdns.org}
       NFS_WEB_DOWNLOADS_DIR: /app/downloads
       NFS_WEB_INVITE_REQUIRED: ${NFS_WEB_INVITE_REQUIRED:-1}
+      NFS_WEB_ADMIN_PASSWORD_HASH: ${NFS_WEB_ADMIN_PASSWORD_HASH:-}
       # NPM terminates TLS and the published port is loopback-only.
       # Harden with trusted proxy CIDRs before accepting public HTTP.
       NFS_WEB_ALLOW_INSECURE: ${NFS_WEB_ALLOW_INSECURE:-1}

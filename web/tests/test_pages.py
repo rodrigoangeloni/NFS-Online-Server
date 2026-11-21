@@ -26,6 +26,17 @@ def test_account_page_has_forms(client: TestClient) -> None:
     assert 'id="createInviteCode"' in page.text
 
 
+def test_admin_page_has_forms(client: TestClient) -> None:
+    page = client.get("/admin")
+    assert page.status_code == 200
+    assert 'id="adminLoginForm"' in page.text
+    assert 'id="adminCreateForm"' in page.text
+    assert 'id="inviteTable"' in page.text
+    script = client.get("/static/admin.js")
+    assert script.status_code == 200
+    assert "loadInvites" in script.text
+
+
 def test_live_payload_without_runtime_file(client: TestClient) -> None:
     response = client.get("/api/live")
     assert response.status_code == 200

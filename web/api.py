@@ -12,12 +12,14 @@ from pydantic import BaseModel
 
 from common.accounts import SharedAccountExistsError, SharedPersonaExistsError
 from web.accounts import AccountService, AccountView, AuthError, InviteError, RegisterPayload
+from web.admin import AdminAuthError, AdminService
 from web.config import WebSettings
 from web.downloads import DownloadNotFound, DownloadService
 from web.security import RateLimiter, require_csrf, require_https
 
 
 SESSION_COOKIE = "nfs_web_session"
+ADMIN_COOKIE = "nfs_web_admin"
 
 
 class RegisterBody(BaseModel):
@@ -38,6 +40,16 @@ class LoginBody(BaseModel):
 
 class PreferencesBody(BaseModel):
     appearOnline: bool = True
+
+
+class AdminLoginBody(BaseModel):
+    password: str = ""
+
+
+class AdminInviteBody(BaseModel):
+    label: str = ""
+    maxUses: int = 1
+    days: float = 0.0
 
 
 def account_json(account: AccountView) -> dict[str, Any]:
@@ -124,6 +136,7 @@ def build_router(
     accounts: AccountService,
     downloads: DownloadService,
     limiter: RateLimiter,
+    admin: AdminService,
 ) -> APIRouter:
     router = APIRouter()
 
@@ -243,5 +256,69 @@ def build_router(
             media_type="application/zip",
             filename=path.name,
         )
+
+    def admin_session(request: Request):
+        session = admin.me(str(request.cookies.get(ADMIN_COOKIE) or ""))
+        if session is None:
+            raise HTTPException(status_code=401, detail="admin authentication required")
+        return session
+
+    @router.post("/api/admin/login")
+    def admin_login(request: Request, body: AdminLoginBody) -> JSONResponse:
+        require_https(request, settings)
+        limiter.check(_client_key(request, "admin-login"))
+        try:
+            token, csrf = admin.login(body.password)
+        except AdminAuthError as exc:
+            raise HTTPException(status_code=401, detail="Clave de administrador incorrecta.") from exc
+        response = JSONResponse({"authenticated": True, "csrfToken": csrf})
+        response.set_cookie(
+            ADMIN_COOKIE,
+            token,
+            max_age=settings.session_seconds,
+            httponly=True,
+            samesite="lax",
+            secure=not settings.allow_insecure,
+            path="/",
+        )
+        return response
+
+    @router.get("/api/admin/me")
+    def admin_me(request: Request) -> dict[str, Any]:
+        session = admin.me(str(request.cookies.get(ADMIN_COOKIE) or ""))
+        if session is None:
+            return {"authenticated": False, "csrfToken": None}
+        return {"authenticated": True, "csrfToken": session.csrf_token}
+
+    @router.post("/api/admin/logout")
+    def admin_logout(request: Request) -> JSONResponse:
+        session = admin_session(request)
+        require_csrf(request, session)
+        admin.logout(str(request.cookies.get(ADMIN_COOKIE) or ""))
+        response = JSONResponse({"ok": True})
+        response.delete_cookie(ADMIN_COOKIE, path="/")
+        return response
+
+    @router.get("/api/admin/invites")
+    def admin_invites(request: Request) -> dict[str, Any]:
+        admin_session(request)
+        return {"invites": admin.list_invites()}
+
+    @router.post("/api/admin/invites")
+    def admin_create_invite(request: Request, body: AdminInviteBody) -> dict[str, Any]:
+        session = admin_session(request)
+        require_csrf(request, session)
+        try:
+            invite = admin.create_invite(body.label, body.maxUses, body.days)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"invite": invite}
+
+    @router.post("/api/admin/invites/{code_hash}/revoke")
+    def admin_revoke_invite(request: Request, code_hash: str) -> dict[str, Any]:
+        session = admin_session(request)
+        require_csrf(request, session)
+        admin.revoke_invite(code_hash)
+        return {"ok": True}
 
     return router

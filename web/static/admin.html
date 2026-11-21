@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080a08">
+  <title>Administración — NFS Online</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="account-page">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="NFS Online, inicio">
+      <span class="brand-mark">NFS</span>
+      <span class="brand-word">ONLINE</span>
+    </a>
+    <nav class="topnav" aria-label="Principal">
+      <a href="/">Sitio</a>
+      <a href="/#descargas">Descargas</a>
+      <a href="/account">Cuenta</a>
+      <a href="/admin" aria-current="page">Admin</a>
+    </nav>
+    <a class="btn btn-small btn-ghost" href="/">Volver al inicio</a>
+  </header>
+
+  <main id="contenido" class="admin-main">
+    <section class="account-intro">
+      <p class="eyebrow"><span class="pulse"></span> Acceso restringido</p>
+      <h1>Panel de<br><em>administración</em></h1>
+      <p>
+        Desde acá podés crear, ver y revocar códigos de invitación.
+        Los códigos se guardan en la misma base que las cuentas y el servidor.
+      </p>
+    </section>
+
+    <section id="adminLoginPanel" class="panel admin-login">
+      <div class="panel-head">
+        <span class="panel-index">ADM</span>
+        <div>
+          <h2>Entrar</h2>
+          <p class="panel-sub">Clave de administrador.</p>
+        </div>
+      </div>
+      <form id="adminLoginForm" novalidate>
+        <label class="field">
+          <span>Clave</span>
+          <input id="adminPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Entrar al panel</button>
+      </form>
+      <p id="adminLoginMessage" class="form-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="adminPanel" class="panel admin-panel" hidden>
+      <div class="panel-head">
+        <span class="panel-index">ADM</span>
+        <div>
+          <h2>Invitaciones</h2>
+          <p class="panel-sub">Compartí el código con tus amigos.</p>
+        </div>
+        <button id="adminLogoutButton" class="btn btn-small btn-ghost" type="button">Cerrar sesión</button>
+      </div>
+
+      <form id="adminCreateForm" class="admin-create" novalidate>
+        <label class="field">
+          <span>Etiqueta</span>
+          <input id="adminLabel" placeholder="amigos, torneo, etc." maxlength="60">
+        </label>
+        <label class="field">
+          <span>Usos</span>
+          <input id="adminMaxUses" type="number" min="1" max="1000" value="10">
+        </label>
+        <label class="field">
+          <span>Vence en días</span>
+          <input id="adminDays" type="number" min="0" max="3650" value="30">
+          <small>0 = sin vencimiento.</small>
+        </label>
+        <button class="btn btn-primary" type="submit">Crear invitación</button>
+      </form>
+
+      <p id="adminMessage" class="form-message" role="status" aria-live="polite"></p>
+
+      <div class="admin-toolbar">
+        <span class="board-label">INVITACIONES</span>
+        <span id="inviteCount" class="muted">—</span>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Etiqueta</th>
+              <th>Usos</th>
+              <th>Vence</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="inviteTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <span class="brand-mark">NFS</span>
+      <span class="brand-word">ONLINE</span>
+    </div>
+    <p>Panel interno. No compartas la clave de administrador.</p>
+  </footer>
+
+  <script src="/static/admin.js" defer></script>
+</body>
+</html>

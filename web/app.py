@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from common.accounts import SQLiteAccountDatabase
 from web.accounts import AccountService
+from web.admin import AdminService
 from web.api import build_router
 from web.config import WebSettings, load_settings
 from web.db import WebDatabase
@@ -29,12 +30,14 @@ def create_app(settings: WebSettings | None = None) -> FastAPI:
     )
     downloads = DownloadService(active.downloads_dir)
     limiter = RateLimiter(limit=5, window=60.0)
+    admin_service = AdminService(web_db, active)
 
     app.state.settings = active
     app.state.web_db = web_db
     app.state.accounts = account_service
     app.state.downloads = downloads
     app.state.limiter = limiter
+    app.state.admin = admin_service
 
     if active.static_dir.is_dir():
         app.mount(
@@ -43,7 +46,7 @@ def create_app(settings: WebSettings | None = None) -> FastAPI:
             name="static",
         )
 
-    app.include_router(build_router(active, account_service, downloads, limiter))
+    app.include_router(build_router(active, account_service, downloads, limiter, admin_service))
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
@@ -65,6 +68,10 @@ def create_app(settings: WebSettings | None = None) -> FastAPI:
     @app.get("/account", include_in_schema=False)
     def account_page() -> FileResponse:
         return _page(active.static_dir / "account.html")
+
+    @app.get("/admin", include_in_schema=False)
+    def admin_page() -> FileResponse:
+        return _page(active.static_dir / "admin.html")
 
     return app
 

@@ -63,6 +63,37 @@ NFS_GAMES=u2,mw
 NFS_LOG_LEVEL=INFO
 ```
 
+### 3.1 Clave de administrador
+
+Generar el hash PBKDF2 de la clave que va a usar el panel:
+
+```bash
+cd /opt/nfs-online/repo
+python3 tools/admin_password.py
+```
+
+Copiar el hash que imprime en:
+
+```bash
+/opt/nfs-online/env/web.env
+```
+
+Contenido de `web.env`:
+
+```ini
+NFS_UID=1000
+NFS_GID=1000
+NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org
+NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org
+NFS_WEB_DOWNLOADS_DIR=/opt/nfs-online/artifacts/downloads
+NFS_WEB_INVITE_REQUIRED=1
+NFS_WEB_ADMIN_PASSWORD_HASH=pbkdf2_sha256$...
+```
+
+El panel queda en `https://nfs-fps.duckdns.org/admin`. Ahí se ven,
+crean y revocan invitaciones. El código se guarda en la SQLite para
+poder consultarlo después.
+
 Comprobar:
 
 ```bash
@@ -98,12 +129,8 @@ Levantar la web:
 
 ```bash
 cd /opt/nfs-online/repo
-NFS_UID=1000 NFS_GID=1000 \
-NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org \
-NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org \
-NFS_WEB_INVITE_REQUIRED=1 \
-NFS_DOWNLOADS_DIR=/opt/nfs-online/artifacts/downloads \
-docker compose -f docker/compose.web.yml up -d --build
+docker compose --env-file /opt/nfs-online/env/web.env \
+  -f docker/compose.web.yml up -d --build
 ```
 
 La web escucha en `127.0.0.1:8096` y en la red Docker de NPM como

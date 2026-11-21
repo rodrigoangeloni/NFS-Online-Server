@@ -26,6 +26,7 @@ def test_invite_is_single_use(tmp_path: Path) -> None:
     code = db.create_invite("friends", 1, None, "admin")
     assert db.consume_invite(code) is True
     assert db.consume_invite(code) is False
+    assert db.list_invites()[0]["code"] == code
 
 
 def test_invite_expiry_and_refund(tmp_path: Path) -> None:

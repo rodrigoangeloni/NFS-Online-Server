@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS web_account_preferences (
 
 CREATE TABLE IF NOT EXISTS web_invites (
     code_hash TEXT PRIMARY KEY,
+    code TEXT NOT NULL DEFAULT '',
     label TEXT NOT NULL DEFAULT '',
     max_uses INTEGER NOT NULL CHECK(max_uses > 0),
     uses INTEGER NOT NULL DEFAULT 0 CHECK(uses >= 0),
@@ -156,6 +157,14 @@ class WebDatabase:
         with self.connect() as connection:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.executescript(SCHEMA)
+            columns = {
+                str(row["name"])
+                for row in connection.execute("PRAGMA table_info(web_invites)").fetchall()
+            }
+            if "code" not in columns:
+                connection.execute(
+                    "ALTER TABLE web_invites ADD COLUMN code TEXT NOT NULL DEFAULT ''"
+                )
 
     def create_session(
         self,
@@ -279,12 +288,13 @@ class WebDatabase:
             connection.execute(
                 """
                 INSERT INTO web_invites(
-                    code_hash, label, max_uses, uses, expires_at,
+                    code_hash, code, label, max_uses, uses, expires_at,
                     created_by, created_at, revoked_at
-                ) VALUES(?, ?, ?, 0, ?, ?, ?, NULL)
+                ) VALUES(?, ?, ?, ?, 0, ?, ?, ?, NULL)
                 """,
                 (
                     _hash_token(_normalize_invite(code)),
+                    code,
                     str(label or "").strip(),
                     uses,
                     None if expires_at is None else float(expires_at),

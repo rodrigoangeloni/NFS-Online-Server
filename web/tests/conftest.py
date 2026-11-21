@@ -11,8 +11,10 @@ sys.path.insert(0, str(REPO_ROOT / "server"))
 from web.config import WebSettings, load_settings  # noqa: E402
 from web.db import WebDatabase  # noqa: E402
 from web.accounts import AccountService  # noqa: E402
+from web.admin import AdminService  # noqa: E402
 from web.downloads import DownloadService  # noqa: E402
 from web.app import create_app  # noqa: E402
+from common.accounts import SQLiteAccountDatabase  # noqa: E402
 
 
 @pytest.fixture
@@ -39,6 +41,10 @@ def settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> WebSettings:
     monkeypatch.setenv("NFS_WEB_DOWNLOADS_DIR", str(downloads))
     monkeypatch.setenv("NFS_WEB_PUBLIC_HOST", "testserver")
     monkeypatch.setenv("NFS_WEB_ALLOW_INSECURE", "1")
+    monkeypatch.setenv(
+        "NFS_WEB_ADMIN_PASSWORD_HASH",
+        SQLiteAccountDatabase.encode_password("admin-test-password"),
+    )
     return load_settings()
 
 
@@ -59,6 +65,11 @@ def service(
     settings: WebSettings,
 ) -> AccountService:
     return AccountService(database, web_db, settings)
+
+
+@pytest.fixture
+def admin_service(web_db: WebDatabase, settings: WebSettings) -> AdminService:
+    return AdminService(web_db, settings)
 
 
 @pytest.fixture

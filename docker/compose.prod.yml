@@ -1,0 +1,68 @@
+# Production stack: game server + web, managed by Docker Compose.
+name: nfs-online
+
+services:
+  nfs-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    container_name: nfs-server
+    user: "${NFS_UID:-1000}:${NFS_GID:-1000}"
+    environment:
+      NFS_GAMES: ${NFS_GAMES:-u2,mw}
+      NFS_PUBLIC_HOST: ${NFS_PUBLIC_HOST:-nfs-fps.duckdns.org}
+      NFS_LOCAL_IPV4: ${NFS_LOCAL_IPV4:-192.0.2.200}
+      NFS_LOG_LEVEL: INFO
+    # Bypass the router's split-horizon DNS for the public host.
+    dns:
+      - 1.1.1.1
+    ports:
+      - "0.0.0.0:13505:13505"
+      - "0.0.0.0:20921:20921"
+      - "0.0.0.0:20922:20922"
+      - "0.0.0.0:20923:20923"
+      - "0.0.0.0:30920:30920"
+      - "0.0.0.0:30921:30921"
+      - "0.0.0.0:20000-20005:20000-20005/udp"
+    volumes:
+      - ../data:/app/data
+      - ../runtime:/app/runtime
+      - ../logs:/app/logs
+      - ../config:/app/config:ro
+    restart: unless-stopped
+
+  nfs-web:
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
+    container_name: nfs-web
+    user: "${NFS_UID:-1000}:${NFS_GID:-1000}"
+    environment:
+      NFS_WEB_CONFIG: /app/config/server.toml
+      NFS_WEB_PUBLIC_HOST: ${NFS_WEB_PUBLIC_HOST:-nfs-fps.duckdns.org}
+      NFS_WEB_SITE_URL: ${NFS_WEB_SITE_URL:-https://nfs-fps.duckdns.org}
+      NFS_WEB_DOWNLOADS_DIR: /app/downloads
+      NFS_WEB_INVITE_REQUIRED: ${NFS_WEB_INVITE_REQUIRED:-1}
+      NFS_WEB_EMAIL_REQUIRED: ${NFS_WEB_EMAIL_REQUIRED:-1}
+      NFS_WEB_ADMIN_USERNAME: ${NFS_WEB_ADMIN_USERNAME:-admin}
+      NFS_WEB_ADMIN_PASSWORD_HASH: ${NFS_WEB_ADMIN_PASSWORD_HASH:-}
+      NFS_WEB_ALLOW_INSECURE: ${NFS_WEB_ALLOW_INSECURE:-1}
+      NFS_WEB_TRUSTED_PROXY_IPS: ${NFS_WEB_TRUSTED_PROXY_IPS:-172.28.0.0/16}
+    ports:
+      - "127.0.0.1:8096:8080"
+    volumes:
+      - ../data:/app/data
+      - ../runtime:/app/runtime:ro
+      - ../config:/app/config:ro
+      - ../server:/app/server:ro
+      - ../web:/app/web:ro
+      - ${NFS_DOWNLOADS_DIR:-../../artifacts/downloads}:/app/downloads:ro
+    networks:
+      - default
+      - npm
+    restart: unless-stopped
+
+networks:
+  npm:
+    external: true
+    name: ${NFS_NPM_NETWORK:-nginx-proxy-manager-new_default}

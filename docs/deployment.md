@@ -106,58 +106,39 @@ cd /opt/nfs-online/repo
 python3 nfs_online.py check
 ```
 
-## 4. Servidor de juego en Docker
+## 4. Stack Docker (juego + web)
 
-El servidor de juego corre como contenedor para que aparezca en Portainer y
-pueda cambiarse el puerto publicado sin tocar el puerto interno.
+El stack completo está en `docker/compose.prod.yml`; ambos contenedores
+aparecen en Portainer → **Containers** (proyecto `nfs-online`).
 
 ```bash
 sudo systemctl disable --now nfs-online.service 2>/dev/null || true
 
 cd /opt/nfs-online/repo
-docker compose --env-file /opt/nfs-online/env/nfs.env \
-  -f docker/compose.server.yml up -d --build
-docker ps --filter name=nfs-server --format "{{.Names}} {{.Status}} {{.Ports}}"
+docker compose \
+  --env-file /opt/nfs-online/env/nfs.env \
+  --env-file /opt/nfs-online/env/web.env \
+  -f docker/compose.prod.yml up -d --build
+docker compose \
+  --env-file /opt/nfs-online/env/nfs.env \
+  --env-file /opt/nfs-online/env/web.env \
+  -f docker/compose.prod.yml ps
+```
+
+`nfs-server` usa `dns: 1.1.1.1` para que el DNS split-horizon del router
+no le devuelva `192.0.2.200`; así anuncia la IP pública
+`<IP publica>`. `nfs-web` queda en `127.0.0.1:8096` y en la red de NPM
+como `nfs-web:8080`.
+
+Verificar:
+
+```bash
 docker logs nfs-server --tail 20
-```
-
-El contenedor usa `dns: 1.1.1.1` para resolver el dominio público sin que el
-DNS split-horizon del router devuelva `192.0.2.200`.
-
-Logs:
-
-```bash
-docker logs nfs-server -f
-tail -f /opt/nfs-online/repo/logs/classic.log
-```
-
-El archivo `deploy/systemd/nfs-online.service` queda como respaldo, pero el
-flujo normal es Docker.
-
-## 5. Web en Docker
-
-La red de NPM ya existe:
-
-```bash
-docker network ls | grep nginx-proxy-manager
-```
-
-Levantar la web:
-
-```bash
-cd /opt/nfs-online/repo
-docker compose --env-file /opt/nfs-online/env/web.env \
-  -f docker/compose.web.yml up -d --build
-```
-
-La web escucha en `127.0.0.1:8096` y en la red Docker de NPM como
-`nfs-web:8080`. Verificar desde el host:
-
-```bash
+docker logs nfs-web --tail 20
 curl -fsS http://127.0.0.1:8096/healthz
 ```
 
-## 6. NPM
+## 5. NPM
 
 Crear un **Proxy Host**:
 

@@ -16,15 +16,14 @@ set -a
 set +a
 python3 nfs_online.py check
 
-echo "== juego =="
-docker compose -f docker/compose.server.yml up -d --build
+echo "== juego + web =="
+docker compose --env-file "$GAME_ENV" --env-file "$WEB_ENV" \
+  -f docker/compose.prod.yml up -d --build
 sleep 3
-docker ps --filter name=nfs-server --format "{{.Names}} {{.Status}} {{.Ports}}"
+docker compose --env-file "$GAME_ENV" --env-file "$WEB_ENV" \
+  -f docker/compose.prod.yml ps
 docker logs nfs-server --tail 15
-
-echo "== web =="
-docker compose --env-file "$WEB_ENV" -f docker/compose.web.yml up -d --build
-sleep 2
 curl -fsS http://127.0.0.1:8096/healthz
 echo
 echo "== listo =="
+

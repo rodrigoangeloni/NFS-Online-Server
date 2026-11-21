@@ -35,6 +35,7 @@ class WebSettings:
     admin_password_hash: str
     session_seconds: int
     invite_required: bool
+    email_required: bool
     allow_insecure: bool
     trusted_proxy_ips: tuple[str, ...]
 
@@ -107,6 +108,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> WebSettings:
         admin_password_hash=_env(env, "NFS_WEB_ADMIN_PASSWORD_HASH"),
         session_seconds=session_seconds,
         invite_required=_env_bool(env, "NFS_WEB_INVITE_REQUIRED", True),
+        email_required=_env_bool(env, "NFS_WEB_EMAIL_REQUIRED", True),
         allow_insecure=_env_bool(env, "NFS_WEB_ALLOW_INSECURE", False),
         trusted_proxy_ips=_csv(_env(env, "NFS_WEB_TRUSTED_PROXY_IPS")),
     )

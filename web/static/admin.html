@@ -102,6 +102,54 @@
           <tbody id="inviteTable"></tbody>
         </table>
       </div>
+
+      <section class="security-grid admin-security">
+        <div class="panel security-card">
+          <h3>Cambiar clave de administrador</h3>
+          <form id="adminPasswordForm" novalidate>
+            <label class="field">
+              <span>Clave actual</span>
+              <input id="adminCurrentPassword" type="password" autocomplete="current-password" required>
+            </label>
+            <label class="field">
+              <span>Clave nueva</span>
+              <input id="adminNewPassword" type="password" autocomplete="new-password" minlength="10" required>
+            </label>
+            <label class="field">
+              <span>Repetir clave nueva</span>
+              <input id="adminPasswordConfirm" type="password" autocomplete="new-password" minlength="10" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Cambiar clave</button>
+          </form>
+          <p id="adminPasswordMessage" class="form-message" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <div class="admin-toolbar">
+        <span class="board-label">CUENTAS</span>
+        <span id="accountCount" class="muted">—</span>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Persona</th>
+              <th>Email</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="accountTable"></tbody>
+        </table>
+      </div>
+      <p id="adminAccountsMessage" class="form-message" role="status" aria-live="polite"></p>
+      <div id="adminTempPasswordBox" class="recovery-box" hidden>
+        <span class="board-label">CONTRASEÑA TEMPORAL</span>
+        <code id="adminTempPasswordValue"></code>
+        <button id="copyAdminTempPassword" class="icon-btn" type="button">COPIAR</button>
+        <p class="muted">Pasásela al jugador. Debe cambiarla al entrar; vence en 24 horas.</p>
+      </div>
     </section>
   </main>
 

@@ -9,7 +9,7 @@ from web.accounts import AccountService, AuthError, InviteError, RegisterPayload
 def make_payload(code: str, name: str) -> RegisterPayload:
     return RegisterPayload(
         account_name=name,
-        email="",
+        email="driver@example.com",
         password="secret123",
         persona=name,
         country_code="PY",
@@ -69,3 +69,37 @@ def test_preferences_queue_visibility_event(service: AccountService) -> None:
     assert result["syncQueued"] is True
     events = service.web_db.visibility_events()
     assert events[-1]["source_persona"] == "Driver"
+
+
+def test_recovery_code_and_forgot_password(service: AccountService) -> None:
+    code = service.web_db.create_invite("test", 1, None, "test")
+    token, csrf, account, recovery = service.register_with_recovery(
+        make_payload(code, "Driver")
+    )
+    assert recovery.startswith("NFS-REC-")
+    temp = service.forgot_password("Driver", "driver@example.com", recovery)
+    assert temp.startswith("NFS-TMP-")
+    temp_token, _, temp_account = service.login("Driver", temp)
+    assert temp_account.must_change_password is True
+    service.change_password(temp_token, temp, "newsecret123")
+    new_token, _, new_account = service.login("Driver", "newsecret123")
+    assert new_account.must_change_password is False
+    assert new_token
+
+
+def test_change_password_rejects_old_password(service: AccountService) -> None:
+    code = service.web_db.create_invite("test", 1, None, "test")
+    token, _, _ = service.register(make_payload(code, "Driver"))
+    service.change_password(token, "secret123", "newsecret123")
+    with pytest.raises(AuthError):
+        service.login("Driver", "secret123")
+    assert service.login("Driver", "newsecret123")[2].account_name == "Driver"
+
+
+def test_set_email_and_regenerate_recovery_code(service: AccountService) -> None:
+    code = service.web_db.create_invite("test", 1, None, "test")
+    token, _, _ = service.register(make_payload(code, "Driver"))
+    account = service.set_email(token, "new@example.com", "secret123")
+    assert account.email == "new@example.com"
+    recovery = service.regenerate_recovery_code(token)
+    assert recovery.startswith("NFS-REC-")

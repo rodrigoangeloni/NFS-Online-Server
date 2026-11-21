@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import time
 
 from common.accounts import SQLiteAccountDatabase
@@ -9,14 +10,28 @@ from web.config import WebSettings
 from web.db import Session, WebDatabase
 
 
+TEMP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+
+def _temporary_password() -> str:
+    raw = "".join(secrets.choice(TEMP_ALPHABET) for _ in range(8))
+    return f"NFS-TMP-{raw[:4]}-{raw[4:]}"
+
+
 class AdminAuthError(ValueError):
     """The admin password or session is invalid."""
 
 
 class AdminService:
-    def __init__(self, web_db: WebDatabase, settings: WebSettings) -> None:
+    def __init__(
+        self,
+        web_db: WebDatabase,
+        settings: WebSettings,
+        database: SQLiteAccountDatabase | None = None,
+    ) -> None:
         self.web_db = web_db
         self.settings = settings
+        self.database = database
 
     @staticmethod
     def hash_password(password: str) -> str:
@@ -26,8 +41,18 @@ class AdminService:
     def verify_password(password: str, encoded: str) -> bool:
         return SQLiteAccountDatabase.verify_password(password, encoded)
 
+    def _current_password_hash(self) -> str:
+        stored = self.web_db.get_admin_password_hash()
+        if stored:
+            return stored
+        configured = str(self.settings.admin_password_hash or "").strip()
+        if configured:
+            self.web_db.set_admin_password_hash(configured)
+            return configured
+        return ""
+
     def login(self, password: str) -> tuple[str, str]:
-        encoded = str(self.settings.admin_password_hash or "").strip()
+        encoded = self._current_password_hash()
         if not encoded:
             raise AdminAuthError("admin_disabled")
         if not self.verify_password(str(password or ""), encoded):
@@ -35,6 +60,23 @@ class AdminService:
             raise AdminAuthError("bad_password")
         token, csrf = self.web_db.create_session(None, role="admin")
         self.web_db.audit("admin", "admin.login", {})
+        return token, csrf
+
+    def change_password(
+        self,
+        current_password: str,
+        new_password: str,
+    ) -> tuple[str, str]:
+        encoded = self._current_password_hash()
+        if not encoded or not self.verify_password(str(current_password or ""), encoded):
+            self.web_db.audit("admin", "admin.password_failed", {})
+            raise AdminAuthError("bad_password")
+        if len(str(new_password or "")) < 10:
+            raise ValueError("La clave nueva debe tener al menos 10 caracteres.")
+        self.web_db.set_admin_password_hash(self.hash_password(str(new_password)))
+        self.web_db.delete_admin_sessions()
+        token, csrf = self.web_db.create_session(None, role="admin")
+        self.web_db.audit("admin", "admin.password_changed", {})
         return token, csrf
 
     def me(self, token: str) -> Session | None:
@@ -46,6 +88,44 @@ class AdminService:
     def logout(self, token: str) -> None:
         self.web_db.audit("admin", "admin.logout", {})
         self.web_db.delete_session(token)
+
+    def list_accounts(self) -> list[dict[str, object]]:
+        if self.database is None:
+            return []
+        result: list[dict[str, object]] = []
+        for record in self.database.accounts():
+            security = self.web_db.get_security(record.account_id)
+            result.append(
+                {
+                    "accountId": record.account_id,
+                    "accountName": record.account_name,
+                    "personas": list(record.personas),
+                    "email": record.email,
+                    "enabled": record.enabled,
+                    "banned": record.banned,
+                    "mustChangePassword": bool(security.get("must_change")),
+                }
+            )
+        return result
+
+    def reset_account_password(self, account_name: str) -> str:
+        if self.database is None:
+            raise ValueError("account database not configured")
+        record = self.database.resolve_account(account_name)
+        if record is None:
+            raise ValueError("La cuenta no existe.")
+        temporary = _temporary_password()
+        self.database.set_password(record.account_name, temporary)
+        self.web_db.set_must_change(
+            record.account_id,
+            time.time() + 24 * 3600,
+        )
+        self.web_db.audit(
+            "admin",
+            "admin.account_reset",
+            {"accountId": record.account_id, "accountName": record.account_name},
+        )
+        return temporary
 
     def list_invites(self) -> list[dict[str, object]]:
         now = time.time()

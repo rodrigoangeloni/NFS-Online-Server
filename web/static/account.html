@@ -58,6 +58,7 @@
           </label>
           <button class="btn btn-primary btn-block" type="submit">Entrar</button>
         </form>
+        <button id="showForgot" class="link-button" type="button">Olvidé mi contraseña</button>
       </section>
 
       <section id="createPanel" class="panel auth-panel auth-panel-accent" aria-labelledby="create-title">
@@ -82,9 +83,9 @@
             </label>
           </div>
           <label class="field">
-            <span>Email <em>(opcional)</em></span>
-            <input id="createEmail" name="email" type="email" autocomplete="email">
-            <small>Sirve para recuperar la cuenta más adelante.</small>
+            <span>Email</span>
+            <input id="createEmail" name="email" type="email" autocomplete="email" required>
+            <small>Obligatorio para poder recuperar la cuenta.</small>
           </label>
           <div class="field-row">
             <label class="field">
@@ -111,6 +112,40 @@
       </section>
     </div>
 
+    <section id="forgotPanel" class="panel admin-login" hidden aria-labelledby="forgot-title">
+      <div class="panel-head">
+        <span class="panel-index">REC</span>
+        <div>
+          <h2 id="forgot-title">Recuperar cuenta</h2>
+          <p class="panel-sub">Cuenta + email + código de recuperación.</p>
+        </div>
+      </div>
+      <form id="forgotForm" novalidate>
+        <label class="field">
+          <span>Nombre de cuenta</span>
+          <input id="forgotAccountName" autocomplete="username" required>
+        </label>
+        <label class="field">
+          <span>Email registrado</span>
+          <input id="forgotEmail" type="email" autocomplete="email" required>
+        </label>
+        <label class="field">
+          <span>Código de recuperación</span>
+          <input id="forgotRecoveryCode" placeholder="NFS-REC-XXXX-XXXX" autocomplete="off" required>
+          <small>Es el código que se mostró al crear la cuenta.</small>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Generar contraseña temporal</button>
+      </form>
+      <p id="forgotMessage" class="form-message" role="status" aria-live="polite"></p>
+      <div id="temporaryPasswordBox" class="recovery-box" hidden>
+        <span class="board-label">CONTRASEÑA TEMPORAL</span>
+        <code id="temporaryPasswordValue"></code>
+        <button id="copyTemporaryPassword" class="icon-btn" type="button">COPIAR</button>
+        <p class="muted">Entrá con esta contraseña y cambiala. Vence en 24 horas.</p>
+      </div>
+      <button id="hideForgot" class="link-button" type="button">Volver al inicio de sesión</button>
+    </section>
+
     <section id="accountPanel" class="panel account-panel" hidden aria-labelledby="account-title">
       <div class="panel-head">
         <span class="panel-index">OK</span>
@@ -119,6 +154,16 @@
           <p class="panel-sub">Tu cuenta está lista para jugar.</p>
         </div>
         <button id="logoutButton" class="btn btn-small btn-ghost" type="button">Cerrar sesión</button>
+      </div>
+
+      <div id="mustChangeWarning" class="warning" hidden>
+        Estás usando una contraseña temporal. Cambiala ahora para asegurar la cuenta.
+      </div>
+      <div id="registrationRecoveryBox" class="recovery-box" hidden>
+        <span class="board-label">GUARDÁ ESTE CÓDIGO DE RECUPERACIÓN</span>
+        <code id="registrationRecoveryValue"></code>
+        <button id="copyRegistrationRecovery" class="icon-btn" type="button">COPIAR</button>
+        <p class="muted">Lo vas a necesitar si olvidás la contraseña. No se vuelve a mostrar automáticamente.</p>
       </div>
 
       <div class="account-summary">
@@ -151,6 +196,55 @@
           <a class="btn btn-primary" href="/#descargas">Ir a descargas</a>
         </div>
       </div>
+
+      <section class="security-grid" aria-label="Seguridad de la cuenta">
+        <div class="panel security-card">
+          <h3>Cambiar contraseña</h3>
+          <form id="passwordForm" novalidate>
+            <label class="field">
+              <span>Contraseña actual</span>
+              <input id="passwordCurrent" type="password" autocomplete="current-password" required>
+            </label>
+            <label class="field">
+              <span>Contraseña nueva</span>
+              <input id="passwordNew" type="password" autocomplete="new-password" minlength="8" required>
+            </label>
+            <label class="field">
+              <span>Repetir contraseña nueva</span>
+              <input id="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Cambiar contraseña</button>
+          </form>
+          <p id="passwordMessage" class="form-message" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="panel security-card">
+          <h3>Email de recuperación</h3>
+          <form id="emailForm" novalidate>
+            <label class="field">
+              <span>Email</span>
+              <input id="accountEmailInput" type="email" autocomplete="email" required>
+            </label>
+            <label class="field">
+              <span>Contraseña actual</span>
+              <input id="emailPassword" type="password" autocomplete="current-password" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Guardar email</button>
+          </form>
+          <p id="emailMessage" class="form-message" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="panel security-card">
+          <h3>Código de recuperación</h3>
+          <p class="muted">Guardalo en un lugar seguro. Si generás uno nuevo, el anterior deja de funcionar.</p>
+          <button id="generateRecoveryCode" class="btn" type="button">Generar código nuevo</button>
+          <p id="recoveryMessage" class="form-message" role="status" aria-live="polite"></p>
+          <div id="recoveryCodeBox" class="recovery-box" hidden>
+            <code id="recoveryCodeValue"></code>
+            <button id="copyRecoveryCode" class="icon-btn" type="button">COPIAR</button>
+          </div>
+        </div>
+      </section>
 
       <div id="statsGrid" class="stats-grid" hidden></div>
       <div id="socialInbox" hidden></div>

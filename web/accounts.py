@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import hmac
 import re
+import secrets
+import time
 
 from common.accounts import (
     SharedAccountExistsError,
@@ -16,6 +20,7 @@ from web.db import Preferences, Session, WebDatabase
 
 
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{3,24}$")
+RECOVERY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
 class AccountError(ValueError):
@@ -36,6 +41,10 @@ class AuthError(AccountError):
     def __init__(self, reason: str) -> None:
         super().__init__(reason)
         self.reason = reason
+
+
+class RecoveryError(AccountError):
+    """The account/email/recovery-code combination is invalid."""
 
 
 @dataclass(frozen=True)
@@ -59,6 +68,21 @@ class AccountView:
     primary_persona: str
     appear_online: bool
     challenge_series_assist: bool
+    must_change_password: bool = False
+
+
+def _hash_recovery_code(code: str) -> str:
+    return hashlib.sha256(str(code or "").strip().upper().encode("utf-8")).hexdigest()
+
+
+def _recovery_code() -> str:
+    raw = "".join(secrets.choice(RECOVERY_ALPHABET) for _ in range(8))
+    return f"NFS-REC-{raw[:4]}-{raw[4:]}"
+
+
+def _temporary_password() -> str:
+    raw = "".join(secrets.choice(RECOVERY_ALPHABET) for _ in range(8))
+    return f"NFS-TMP-{raw[:4]}-{raw[4:]}"
 
 
 class AccountService:
@@ -95,6 +119,8 @@ class AccountService:
             raise RegistrationError("El email no parece válido.")
         if len(email) > 254:
             raise RegistrationError("El email es demasiado largo.")
+        if self.settings.email_required and not email:
+            raise RegistrationError("El email es obligatorio para crear la cuenta.")
         return account_name, persona, email, password
 
     def _view(
@@ -103,6 +129,7 @@ class AccountService:
         preferences: Preferences | None = None,
     ) -> AccountView:
         prefs = preferences or self.web_db.get_preferences(record.account_id)
+        security = self.web_db.get_security(record.account_id)
         return AccountView(
             account_id=record.account_id,
             account_name=record.account_name,
@@ -111,6 +138,7 @@ class AccountService:
             primary_persona=record.primary_persona,
             appear_online=prefs.appear_online,
             challenge_series_assist=prefs.challenge_series_assist,
+            must_change_password=bool(security.get("must_change")),
         )
 
     def _account_by_id(self, account_id: int) -> SharedAccountRecord | None:
@@ -120,6 +148,12 @@ class AccountService:
         return None
 
     def register(self, payload: RegisterPayload) -> tuple[str, str, AccountView]:
+        token, csrf, account, _ = self.register_with_recovery(payload)
+        return token, csrf, account
+
+    def register_with_recovery(
+        self, payload: RegisterPayload
+    ) -> tuple[str, str, AccountView, str]:
         account_name, persona, email, password = self._validate(payload)
         invite_consumed = False
         if self.settings.invite_required:
@@ -169,13 +203,27 @@ class AccountService:
                 {"stage": "register"},
             )
 
+        recovery_code = _recovery_code()
+        try:
+            self.web_db.set_recovery_code_hash(
+                record.account_id,
+                _hash_recovery_code(recovery_code),
+            )
+        except Exception:
+            recovery_code = ""
+            self.web_db.audit(
+                account_name,
+                "account.recovery_code_failed",
+                {"stage": "register"},
+            )
+
         token, csrf = self.web_db.create_session(record.account_id)
         self.web_db.audit(
             account_name,
             "account.register",
             {"accountId": record.account_id, "persona": record.primary_persona},
         )
-        return token, csrf, self._view(record)
+        return token, csrf, self._view(record), recovery_code
 
     def login(self, identifier: str, password: str) -> tuple[str, str, AccountView]:
         name = self._clean_name(identifier)
@@ -191,6 +239,21 @@ class AccountService:
         if record is None or record.banned or not record.enabled:
             self.web_db.audit(name, "account.login_failed", {"reason": "unavailable"})
             raise AuthError("unavailable")
+        security = self.web_db.get_security(record.account_id)
+        expires_at = security.get("temp_expires_at")
+        if (
+            bool(security.get("must_change"))
+            and expires_at is not None
+            and float(expires_at) <= time.time()
+        ):
+            self.database.set_password(record.account_name, secrets.token_urlsafe(32))
+            self.web_db.clear_must_change(record.account_id)
+            self.web_db.audit(
+                record.account_name,
+                "account.temp_expired",
+                {"accountId": record.account_id},
+            )
+            raise AuthError("temp_expired")
         token, csrf = self.web_db.create_session(record.account_id)
         self.web_db.audit(
             record.account_name,
@@ -220,6 +283,116 @@ class AccountService:
                     {"accountId": record.account_id},
                 )
         self.web_db.delete_session(token)
+
+    def change_password(
+        self,
+        token: str,
+        current_password: str,
+        new_password: str,
+    ) -> None:
+        current = self.me(token)
+        if current is None:
+            raise AuthError("not_authenticated")
+        session, account = current
+        if len(str(new_password or "")) < 8:
+            raise RegistrationError("La contraseña nueva debe tener al menos 8 caracteres.")
+        result = self.database.authenticate(account.account_name, str(current_password or ""))
+        if not result.accepted:
+            self.web_db.audit(
+                account.account_name,
+                "account.password_failed",
+                {"reason": result.reason},
+            )
+            raise AuthError("bad_password")
+        self.database.set_password(account.account_name, str(new_password))
+        self.web_db.clear_must_change(account.account_id)
+        self.web_db.delete_sessions_for_account(
+            account.account_id,
+            keep_token_hash=session.token_hash,
+        )
+        self.web_db.audit(
+            account.account_name,
+            "account.password_changed",
+            {"accountId": account.account_id, "forced": account.must_change_password},
+        )
+
+    def set_email(
+        self,
+        token: str,
+        email: str,
+        current_password: str,
+    ) -> AccountView:
+        current = self.me(token)
+        if current is None:
+            raise AuthError("not_authenticated")
+        _, account = current
+        value = self._clean_name(email)
+        if self.settings.email_required and not value:
+            raise RegistrationError("El email es obligatorio.")
+        if value and ("@" not in value or "." not in value.rsplit("@", 1)[-1]):
+            raise RegistrationError("El email no parece válido.")
+        if len(value) > 254:
+            raise RegistrationError("El email es demasiado largo.")
+        result = self.database.authenticate(account.account_name, str(current_password or ""))
+        if not result.accepted:
+            raise AuthError("bad_password")
+        record = self.database.set_email(account.account_name, value)
+        self.web_db.audit(
+            account.account_name,
+            "account.email_changed",
+            {"accountId": account.account_id},
+        )
+        return self._view(record)
+
+    def regenerate_recovery_code(self, token: str) -> str:
+        current = self.me(token)
+        if current is None:
+            raise AuthError("not_authenticated")
+        _, account = current
+        code = _recovery_code()
+        self.web_db.set_recovery_code_hash(
+            account.account_id,
+            _hash_recovery_code(code),
+        )
+        self.web_db.audit(
+            account.account_name,
+            "account.recovery_code",
+            {"accountId": account.account_id},
+        )
+        return code
+
+    def forgot_password(
+        self,
+        account_name: str,
+        email: str,
+        recovery_code: str,
+    ) -> str:
+        record = self.database.resolve_account(self._clean_name(account_name))
+        invalid = RecoveryError(
+            "La cuenta, el email o el código de recuperación no coinciden."
+        )
+        if record is None or record.banned or not record.enabled or not record.email:
+            raise invalid
+        if record.email.strip().casefold() != self._clean_name(email).casefold():
+            raise invalid
+        security = self.web_db.get_security(record.account_id)
+        stored = str(security.get("recovery_code_hash") or "")
+        if not stored or not hmac.compare_digest(
+            stored, _hash_recovery_code(recovery_code)
+        ):
+            raise invalid
+        temporary = _temporary_password()
+        self.database.set_password(record.account_name, temporary)
+        self.web_db.set_must_change(
+            record.account_id,
+            time.time() + 24 * 3600,
+        )
+        self.web_db.audit(
+            record.account_name,
+            "account.password_recovery",
+            {"accountId": record.account_id},
+        )
+        return temporary
 
     def update_preferences(
         self,

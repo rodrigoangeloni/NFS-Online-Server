@@ -12,6 +12,13 @@ function setMessage(text, isError = false) {
   node.classList.toggle("is-error", Boolean(isError));
 }
 
+function setSectionMessage(id, text, isError = false) {
+  const node = $(id);
+  if (!node) return;
+  node.textContent = text || "";
+  node.classList.toggle("is-error", Boolean(isError));
+}
+
 function detailMessage(body, fallback) {
   const detail = body && body.detail;
   if (Array.isArray(detail)) {
@@ -70,18 +77,22 @@ function escapeHtml(value) {
 function showAuth() {
   const panels = $("authPanels");
   const accountPanel = $("accountPanel");
+  const forgotPanel = $("forgotPanel");
   if (panels) panels.hidden = false;
   if (accountPanel) accountPanel.hidden = true;
+  if (forgotPanel) forgotPanel.hidden = true;
   currentAccount = null;
 }
 
-function showAccount(account, csrf) {
+function showAccount(account, csrf, recoveryCode = "") {
   currentAccount = account;
   csrfToken = csrf || csrfToken;
   const panels = $("authPanels");
   const accountPanel = $("accountPanel");
+  const forgotPanel = $("forgotPanel");
   if (panels) panels.hidden = true;
   if (accountPanel) accountPanel.hidden = false;
+  if (forgotPanel) forgotPanel.hidden = true;
 
   const accountName = $("accountName");
   const persona = $("accountPersona");
@@ -90,9 +101,28 @@ function showAccount(account, csrf) {
   if (persona) persona.textContent = account.primaryPersona || "—";
   if (email) email.textContent = account.email || "Sin email";
 
+  const emailInput = $("accountEmailInput");
+  if (emailInput) emailInput.value = account.email || "";
+
+  const warning = $("mustChangeWarning");
+  if (warning) warning.hidden = !account.mustChangePassword;
+
+  const recoveryBox = $("registrationRecoveryBox");
+  if (recoveryBox) {
+    recoveryBox.hidden = !recoveryCode;
+    if (recoveryCode) {
+      const value = $("registrationRecoveryValue");
+      if (value) value.textContent = recoveryCode;
+    }
+  }
+
   renderPersonas(account.personas);
   const toggle = $("appearOnlineToggle");
   if (toggle) toggle.checked = Boolean(account.appearOnline);
+  if (account.mustChangePassword) {
+    const password = $("passwordCurrent");
+    if (password) password.focus();
+  }
 }
 
 async function loadMe() {
@@ -157,8 +187,8 @@ function wireRegister() {
           inviteCode: $("createInviteCode").value.trim(),
         },
       });
-      showAccount(payload.account, payload.csrfToken);
-      setMessage("Cuenta creada. Descargá el cliente y entrá al juego.");
+      showAccount(payload.account, payload.csrfToken, payload.recoveryCode || "");
+      setMessage("Cuenta creada. Guardá el código de recuperación y descargá el cliente.");
       form.reset();
     } catch (error) {
       setMessage(error.message || "No se pudo crear la cuenta.", true);
@@ -205,11 +235,202 @@ function wirePreferences() {
   });
 }
 
+async function copyText(text) {
+  const value = String(text || "");
+  if (!value) return false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    /* fall through */
+  }
+  const area = document.createElement("textarea");
+  area.value = value;
+  area.style.position = "fixed";
+  area.style.opacity = "0";
+  document.body.appendChild(area);
+  area.select();
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch {
+    copied = false;
+  }
+  area.remove();
+  return copied;
+}
+
+function wireRecoveryActions() {
+  const showForgot = $("showForgot");
+  const hideForgot = $("hideForgot");
+  if (showForgot) {
+    showForgot.addEventListener("click", () => {
+      const auth = $("authPanels");
+      const account = $("accountPanel");
+      const forgot = $("forgotPanel");
+      if (auth) auth.hidden = true;
+      if (account) account.hidden = true;
+      if (forgot) forgot.hidden = false;
+      setMessage("");
+    });
+  }
+  if (hideForgot) {
+    hideForgot.addEventListener("click", () => {
+      showAuth();
+      setMessage("");
+    });
+  }
+
+  const form = $("forgotForm");
+  if (form) {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const box = $("temporaryPasswordBox");
+      if (box) box.hidden = true;
+      setMessage("Verificando datos…");
+      try {
+        const payload = await api("/api/account/forgot", {
+          method: "POST",
+          body: {
+            accountName: $("forgotAccountName").value.trim(),
+            email: $("forgotEmail").value.trim(),
+            recoveryCode: $("forgotRecoveryCode").value.trim(),
+          },
+        });
+        const value = $("temporaryPasswordValue");
+        if (value) value.textContent = payload.temporaryPassword;
+        if (box) box.hidden = false;
+        setMessage("");
+      } catch (error) {
+        setMessage(error.message || "Los datos no coinciden.", true);
+      }
+    });
+  }
+
+  const copyTemp = $("copyTemporaryPassword");
+  if (copyTemp) {
+    copyTemp.addEventListener("click", async () => {
+      const value = $("temporaryPasswordValue")?.textContent || "";
+      const copied = await copyText(value);
+      copyTemp.textContent = copied ? "COPIADO" : "ERROR";
+      window.setTimeout(() => {
+        copyTemp.textContent = "COPIAR";
+      }, 1500);
+    });
+  }
+
+  const generate = $("generateRecoveryCode");
+  if (generate) {
+    generate.addEventListener("click", async () => {
+      setSectionMessage("recoveryMessage", "Generando código…");
+      try {
+        const payload = await api("/api/account/recovery-code", {
+          method: "POST",
+          body: {},
+        });
+        const value = $("recoveryCodeValue");
+        if (value) value.textContent = payload.recoveryCode;
+        const box = $("recoveryCodeBox");
+        if (box) box.hidden = false;
+        setSectionMessage("recoveryMessage", "Código nuevo generado. Guardalo.");
+      } catch (error) {
+        setSectionMessage("recoveryMessage", error.message || "No se pudo generar.", true);
+      }
+    });
+  }
+
+  const copyRecovery = $("copyRecoveryCode");
+  if (copyRecovery) {
+    copyRecovery.addEventListener("click", async () => {
+      const value = $("recoveryCodeValue")?.textContent || "";
+      const copied = await copyText(value);
+      copyRecovery.textContent = copied ? "COPIADO" : "ERROR";
+      window.setTimeout(() => {
+        copyRecovery.textContent = "COPIAR";
+      }, 1500);
+    });
+  }
+
+  const copyRegistration = $("copyRegistrationRecovery");
+  if (copyRegistration) {
+    copyRegistration.addEventListener("click", async () => {
+      const value = $("registrationRecoveryValue")?.textContent || "";
+      const copied = await copyText(value);
+      copyRegistration.textContent = copied ? "COPIADO" : "ERROR";
+      window.setTimeout(() => {
+        copyRegistration.textContent = "COPIAR";
+      }, 1500);
+    });
+  }
+}
+
+function wirePassword() {
+  const form = $("passwordForm");
+  if (!form) return;
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const newPassword = $("passwordNew").value;
+    if (newPassword !== $("passwordConfirm").value) {
+      setSectionMessage("passwordMessage", "Las contraseñas nuevas no coinciden.", true);
+      return;
+    }
+    setSectionMessage("passwordMessage", "Cambiando contraseña…");
+    try {
+      await api("/api/account/password", {
+        method: "POST",
+        body: {
+          currentPassword: $("passwordCurrent").value,
+          newPassword,
+        },
+      });
+      if (currentAccount) currentAccount.mustChangePassword = false;
+      const warning = $("mustChangeWarning");
+      if (warning) warning.hidden = true;
+      setSectionMessage("passwordMessage", "Contraseña cambiada.");
+      form.reset();
+    } catch (error) {
+      setSectionMessage("passwordMessage", error.message || "No se pudo cambiar.", true);
+    }
+  });
+}
+
+function wireEmail() {
+  const form = $("emailForm");
+  if (!form) return;
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    setSectionMessage("emailMessage", "Guardando email…");
+    try {
+      const payload = await api("/api/account/email", {
+        method: "POST",
+        body: {
+          email: $("accountEmailInput").value.trim(),
+          password: $("emailPassword").value,
+        },
+      });
+      if (currentAccount) currentAccount.email = payload.account.email;
+      const email = $("accountEmail");
+      if (email) email.textContent = payload.account.email || "Sin email";
+      setSectionMessage("emailMessage", "Email guardado.");
+      form.reset();
+      const emailInput = $("accountEmailInput");
+      if (emailInput) emailInput.value = payload.account.email || "";
+    } catch (error) {
+      setSectionMessage("emailMessage", error.message || "No se pudo guardar.", true);
+    }
+  });
+}
+
 function init() {
   wireLogin();
   wireRegister();
   wireLogout();
   wirePreferences();
+  wireRecoveryActions();
+  wirePassword();
+  wireEmail();
   loadMe();
 }
 

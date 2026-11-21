@@ -30,7 +30,7 @@ def create_app(settings: WebSettings | None = None) -> FastAPI:
     )
     downloads = DownloadService(active.downloads_dir)
     limiter = RateLimiter(limit=5, window=60.0)
-    admin_service = AdminService(web_db, active)
+    admin_service = AdminService(web_db, active, account_service.database)
 
     app.state.settings = active
     app.state.web_db = web_db

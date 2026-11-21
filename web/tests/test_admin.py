@@ -44,3 +44,34 @@ def test_admin_disabled_without_hash(admin_service: AdminService) -> None:
 def test_admin_rejects_bad_invite_limits(admin_service: AdminService) -> None:
     with pytest.raises(ValueError):
         admin_service.create_invite("bad", 0, 30)
+
+
+def test_admin_can_change_password(admin_service: AdminService) -> None:
+    admin_service.login("admin-test-password")
+    token, csrf = admin_service.change_password(
+        "admin-test-password",
+        "new-admin-password",
+    )
+    assert csrf
+    assert admin_service.me(token) is not None
+    with pytest.raises(AdminAuthError):
+        admin_service.login("admin-test-password")
+    assert admin_service.login("new-admin-password")[0]
+
+
+def test_admin_lists_and_resets_accounts(admin_service: AdminService) -> None:
+    assert admin_service.database is not None
+    admin_service.database.create_account(
+        "Driver",
+        "secret123",
+        email="driver@example.com",
+    )
+    accounts = admin_service.list_accounts()
+    assert accounts[0]["accountName"] == "Driver"
+    assert accounts[0]["email"] == "driver@example.com"
+
+    temporary = admin_service.reset_account_password("Driver")
+    assert temporary.startswith("NFS-TMP-")
+    assert admin_service.database.authenticate("Driver", temporary).accepted
+    security = admin_service.web_db.get_security(accounts[0]["accountId"])
+    assert security["must_change"] is True

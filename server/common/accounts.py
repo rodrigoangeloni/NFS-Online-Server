@@ -1126,6 +1126,33 @@ class SQLiteAccountDatabase:
             assert updated is not None
             return self._record(connection, updated)
 
+    def set_email(self, identifier: str, email: str) -> SharedAccountRecord:
+        value = self.clean(email)
+        with self.transaction() as connection:
+            row = self._require_account(connection, identifier)
+            account_id = int(row["account_id"])
+            if value:
+                self._ensure_identifier_available(
+                    connection,
+                    value,
+                    allowed_account_id=account_id,
+                )
+            connection.execute(
+                "UPDATE accounts SET email=?, email_key=?, updated_at=? WHERE account_id=?",
+                (
+                    value,
+                    self.normalize(value),
+                    float(self._clock()),
+                    account_id,
+                ),
+            )
+            updated = connection.execute(
+                "SELECT * FROM accounts WHERE account_id=?",
+                (account_id,),
+            ).fetchone()
+            assert updated is not None
+            return self._record(connection, updated)
+
     def set_enabled(self, identifier: str, enabled: bool) -> SharedAccountRecord:
         desired = bool(enabled)
         with self.transaction() as connection:

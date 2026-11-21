@@ -56,3 +56,22 @@ def test_visibility_events_keep_chronological_order(tmp_path: Path) -> None:
     db.queue_visibility("Second")
     events = db.visibility_events()
     assert [event["source_persona"] for event in events] == ["First", "Second"]
+
+
+def test_security_and_admin_credentials(tmp_path: Path) -> None:
+    db = WebDatabase(tmp_path / "accounts.sqlite3")
+    db.ensure_schema()
+    db.set_recovery_code_hash(5, "recovery-hash")
+    security = db.get_security(5)
+    assert security["recovery_code_hash"] == "recovery-hash"
+    assert security["must_change"] is False
+
+    db.set_must_change(5, 2000.0)
+    security = db.get_security(5)
+    assert security["must_change"] is True
+    assert security["temp_expires_at"] == 2000.0
+    db.clear_must_change(5)
+    assert db.get_security(5)["must_change"] is False
+
+    db.set_admin_password_hash("admin-hash")
+    assert db.get_admin_password_hash() == "admin-hash"

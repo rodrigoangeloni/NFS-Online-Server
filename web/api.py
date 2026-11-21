@@ -11,7 +11,14 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from common.accounts import SharedAccountExistsError, SharedPersonaExistsError
-from web.accounts import AccountService, AccountView, AuthError, InviteError, RegisterPayload
+from web.accounts import (
+    AccountService,
+    AccountView,
+    AuthError,
+    InviteError,
+    RecoveryError,
+    RegisterPayload,
+)
 from web.admin import AdminAuthError, AdminService
 from web.config import WebSettings
 from web.downloads import DownloadNotFound, DownloadService
@@ -42,6 +49,27 @@ class PreferencesBody(BaseModel):
     appearOnline: bool = True
 
 
+class PasswordBody(BaseModel):
+    currentPassword: str = ""
+    newPassword: str = ""
+
+
+class EmailBody(BaseModel):
+    email: str = ""
+    password: str = ""
+
+
+class ForgotBody(BaseModel):
+    accountName: str = ""
+    email: str = ""
+    recoveryCode: str = ""
+
+
+class AdminPasswordBody(BaseModel):
+    currentPassword: str = ""
+    newPassword: str = ""
+
+
 class AdminLoginBody(BaseModel):
     password: str = ""
 
@@ -61,6 +89,7 @@ def account_json(account: AccountView) -> dict[str, Any]:
         "primaryPersona": account.primary_persona,
         "appearOnline": account.appear_online,
         "challengeSeriesAssist": account.challenge_series_assist,
+        "mustChangePassword": account.must_change_password,
     }
 
 
@@ -181,7 +210,7 @@ def build_router(
             invite_code=body.inviteCode,
         )
         try:
-            token, csrf, account = accounts.register(payload)
+            token, csrf, account, recovery_code = accounts.register_with_recovery(payload)
         except InviteError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         except (SharedAccountExistsError, SharedPersonaExistsError) as exc:
@@ -196,6 +225,7 @@ def build_router(
                 "authenticated": True,
                 "account": account_json(account),
                 "csrfToken": csrf,
+                "recoveryCode": recovery_code,
             }
         )
         _set_session_cookie(response, token, settings)
@@ -244,6 +274,70 @@ def build_router(
         result = accounts.update_preferences(token, appear_online=body.appearOnline)
         result["ok"] = True
         return result
+
+    @router.post("/api/account/password")
+    def change_password(request: Request, body: PasswordBody) -> dict[str, Any]:
+        require_https(request, settings)
+        token = _session_token(request)
+        current = accounts.me(token)
+        if current is None:
+            raise HTTPException(status_code=401, detail="not authenticated")
+        session, _ = current
+        require_csrf(request, session)
+        try:
+            accounts.change_password(token, body.currentPassword, body.newPassword)
+        except AuthError as exc:
+            raise HTTPException(status_code=401, detail="La contraseña actual no es correcta.") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"ok": True, "mustChangePassword": False}
+
+    @router.post("/api/account/email")
+    def change_email(request: Request, body: EmailBody) -> dict[str, Any]:
+        require_https(request, settings)
+        token = _session_token(request)
+        current = accounts.me(token)
+        if current is None:
+            raise HTTPException(status_code=401, detail="not authenticated")
+        session, _ = current
+        require_csrf(request, session)
+        try:
+            account = accounts.set_email(token, body.email, body.password)
+        except AuthError as exc:
+            raise HTTPException(status_code=401, detail="La contraseña actual no es correcta.") from exc
+        except SharedAccountExistsError as exc:
+            raise HTTPException(status_code=409, detail="Ese email ya está en uso.") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"ok": True, "account": account_json(account)}
+
+    @router.post("/api/account/recovery-code")
+    def recovery_code(request: Request) -> dict[str, Any]:
+        require_https(request, settings)
+        token = _session_token(request)
+        current = accounts.me(token)
+        if current is None:
+            raise HTTPException(status_code=401, detail="not authenticated")
+        session, _ = current
+        require_csrf(request, session)
+        return {"recoveryCode": accounts.regenerate_recovery_code(token)}
+
+    @router.post("/api/account/forgot")
+    def forgot(request: Request, body: ForgotBody) -> dict[str, Any]:
+        require_https(request, settings)
+        limiter.check(_client_key(request, "forgot"))
+        try:
+            temporary = accounts.forgot_password(
+                body.accountName,
+                body.email,
+                body.recoveryCode,
+            )
+        except RecoveryError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="La cuenta, el email o el código de recuperación no coinciden.",
+            ) from exc
+        return {"ok": True, "temporaryPassword": temporary}
 
     @router.get("/downloads/{download_id}")
     def download(download_id: str) -> FileResponse:
@@ -298,6 +392,46 @@ def build_router(
         response = JSONResponse({"ok": True})
         response.delete_cookie(ADMIN_COOKIE, path="/")
         return response
+
+    @router.post("/api/admin/password")
+    def admin_change_password(request: Request, body: AdminPasswordBody) -> JSONResponse:
+        session = admin_session(request)
+        require_csrf(request, session)
+        try:
+            token, csrf = admin.change_password(
+                body.currentPassword,
+                body.newPassword,
+            )
+        except AdminAuthError as exc:
+            raise HTTPException(status_code=401, detail="La clave actual no es correcta.") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        response = JSONResponse({"ok": True, "csrfToken": csrf})
+        response.set_cookie(
+            ADMIN_COOKIE,
+            token,
+            max_age=settings.session_seconds,
+            httponly=True,
+            samesite="lax",
+            secure=not settings.allow_insecure,
+            path="/",
+        )
+        return response
+
+    @router.get("/api/admin/accounts")
+    def admin_accounts(request: Request) -> dict[str, Any]:
+        admin_session(request)
+        return {"accounts": admin.list_accounts()}
+
+    @router.post("/api/admin/accounts/{account_name}/reset-password")
+    def admin_reset_account(request: Request, account_name: str) -> dict[str, Any]:
+        session = admin_session(request)
+        require_csrf(request, session)
+        try:
+            temporary = admin.reset_account_password(account_name)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return {"ok": True, "temporaryPassword": temporary}
 
     @router.get("/api/admin/invites")
     def admin_invites(request: Request) -> dict[str, Any]:

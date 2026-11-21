@@ -36,6 +36,20 @@ CREATE TABLE IF NOT EXISTS web_account_preferences (
     updated_at REAL NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS web_account_security (
+    account_id INTEGER PRIMARY KEY,
+    recovery_code_hash TEXT NOT NULL DEFAULT '',
+    must_change INTEGER NOT NULL DEFAULT 0 CHECK(must_change IN (0, 1)),
+    temp_expires_at REAL,
+    updated_at REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS web_admin_credentials (
+    id INTEGER PRIMARY KEY CHECK(id = 1),
+    password_hash TEXT NOT NULL,
+    updated_at REAL NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS web_invites (
     code_hash TEXT PRIMARY KEY,
     code TEXT NOT NULL DEFAULT '',
@@ -269,6 +283,136 @@ class WebDatabase:
                     timestamp,
                 ),
             )
+
+    def get_security(self, account_id: int) -> dict[str, object]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM web_account_security WHERE account_id=?",
+                (int(account_id),),
+            ).fetchone()
+        if row is None:
+            return {
+                "recovery_code_hash": "",
+                "must_change": False,
+                "temp_expires_at": None,
+            }
+        return {
+            "recovery_code_hash": str(row["recovery_code_hash"] or ""),
+            "must_change": bool(row["must_change"]),
+            "temp_expires_at": (
+                float(row["temp_expires_at"])
+                if row["temp_expires_at"] is not None
+                else None
+            ),
+        }
+
+    def set_recovery_code_hash(
+        self,
+        account_id: int,
+        code_hash: str,
+        *,
+        now: float | None = None,
+    ) -> None:
+        timestamp = time.time() if now is None else float(now)
+        with self.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO web_account_security(
+                    account_id, recovery_code_hash, must_change, temp_expires_at, updated_at
+                ) VALUES(?, ?, 0, NULL, ?)
+                ON CONFLICT(account_id) DO UPDATE SET
+                    recovery_code_hash=excluded.recovery_code_hash,
+                    updated_at=excluded.updated_at
+                """,
+                (int(account_id), str(code_hash or ""), timestamp),
+            )
+
+    def set_must_change(
+        self,
+        account_id: int,
+        expires_at: float,
+        *,
+        now: float | None = None,
+    ) -> None:
+        timestamp = time.time() if now is None else float(now)
+        with self.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO web_account_security(
+                    account_id, recovery_code_hash, must_change, temp_expires_at, updated_at
+                ) VALUES(?, '', 1, ?, ?)
+                ON CONFLICT(account_id) DO UPDATE SET
+                    must_change=1,
+                    temp_expires_at=excluded.temp_expires_at,
+                    updated_at=excluded.updated_at
+                """,
+                (int(account_id), float(expires_at), timestamp),
+            )
+
+    def clear_must_change(
+        self,
+        account_id: int,
+        *,
+        now: float | None = None,
+    ) -> None:
+        timestamp = time.time() if now is None else float(now)
+        with self.connect() as connection:
+            connection.execute(
+                """
+                UPDATE web_account_security
+                   SET must_change=0, temp_expires_at=NULL, updated_at=?
+                 WHERE account_id=?
+                """,
+                (timestamp, int(account_id)),
+            )
+
+    def get_admin_password_hash(self) -> str:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT password_hash FROM web_admin_credentials WHERE id=1"
+            ).fetchone()
+        return str(row["password_hash"] or "") if row is not None else ""
+
+    def set_admin_password_hash(
+        self,
+        password_hash: str,
+        *,
+        now: float | None = None,
+    ) -> None:
+        timestamp = time.time() if now is None else float(now)
+        with self.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO web_admin_credentials(id, password_hash, updated_at)
+                VALUES(1, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    password_hash=excluded.password_hash,
+                    updated_at=excluded.updated_at
+                """,
+                (str(password_hash), timestamp),
+            )
+
+    def delete_sessions_for_account(
+        self,
+        account_id: int,
+        *,
+        keep_token_hash: str | None = None,
+    ) -> None:
+        with self.connect() as connection:
+            if keep_token_hash:
+                connection.execute(
+                    "DELETE FROM web_sessions WHERE account_id=? AND session_hash<>?",
+                    (int(account_id), str(keep_token_hash)),
+                )
+            else:
+                connection.execute(
+                    "DELETE FROM web_sessions WHERE account_id=?",
+                    (int(account_id),),
+                )
+
+    def delete_admin_sessions(self) -> None:
+        with self.connect() as connection:
+            connection.execute("DELETE FROM web_sessions WHERE role='admin'")
 
     def create_invite(
         self,

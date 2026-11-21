@@ -22,6 +22,10 @@ def test_account_page_has_forms(client: TestClient) -> None:
     assert 'id="loginForm"' in page.text
     assert 'id="createForm"' in page.text
     assert 'id="accountPanel"' in page.text
+    assert 'id="forgotForm"' in page.text
+    assert 'id="passwordForm"' in page.text
+    assert 'id="emailForm"' in page.text
+    assert 'id="generateRecoveryCode"' in page.text
     assert 'id="inviteCode"' not in page.text  # the input id is createInviteCode
     assert 'id="createInviteCode"' in page.text
 
@@ -32,9 +36,11 @@ def test_admin_page_has_forms(client: TestClient) -> None:
     assert 'id="adminLoginForm"' in page.text
     assert 'id="adminCreateForm"' in page.text
     assert 'id="inviteTable"' in page.text
+    assert 'id="adminPasswordForm"' in page.text
+    assert 'id="accountTable"' in page.text
     script = client.get("/static/admin.js")
     assert script.status_code == 200
-    assert "loadInvites" in script.text
+    assert "loadAccounts" in script.text
 
 
 def test_live_payload_without_runtime_file(client: TestClient) -> None:

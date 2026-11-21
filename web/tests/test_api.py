@@ -11,7 +11,7 @@ def register_payload(client: TestClient, name: str = "Driver") -> dict[str, obje
     code = client.app.state.web_db.create_invite("test", 1, None, "test")
     return {
         "accountName": name,
-        "email": "",
+        "email": "driver@example.com",
         "password": "secret123",
         "persona": name,
         "countryCode": "PY",

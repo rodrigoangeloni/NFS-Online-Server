@@ -94,6 +94,7 @@ async function loadMe() {
       csrfToken = payload.csrfToken;
       showPanel();
       await loadInvites();
+      await loadAccounts();
     } else {
       showLogin();
     }
@@ -148,6 +149,116 @@ async function loadInvites() {
   }
 }
 
+function renderAccounts(accounts) {
+  const table = $("accountTable");
+  const count = $("accountCount");
+  if (count) {
+    count.textContent = `${accounts.length} cuenta${accounts.length === 1 ? "" : "s"}`;
+  }
+  if (!table) return;
+  if (!accounts.length) {
+    table.innerHTML = '<tr><td colspan="5" class="empty-state">Todavía no hay cuentas.</td></tr>';
+    return;
+  }
+  table.innerHTML = accounts
+    .map((account) => {
+      const state = account.banned ? "baneada" : account.enabled ? "activa" : "deshabilitada";
+      const statusClass = account.banned
+        ? "status-revoked"
+        : account.enabled
+          ? "status-active"
+          : "status-used";
+      return `<tr>
+        <td><code class="invite-code">${escapeHtml(account.accountName)}</code></td>
+        <td>${escapeHtml((account.personas || []).join(", ") || "—")}</td>
+        <td>${escapeHtml(account.email || "—")}</td>
+        <td><span class="status-pill ${statusClass}">${escapeHtml(state)}</span></td>
+        <td class="admin-actions">
+          <button class="icon-btn" type="button" data-reset="${escapeHtml(account.accountName)}">RESET</button>
+        </td>
+      </tr>`;
+    })
+    .join("");
+}
+
+async function loadAccounts() {
+  try {
+    const payload = await api("/api/admin/accounts");
+    renderAccounts(payload.accounts || []);
+  } catch (error) {
+    if (error.status === 401) {
+      showLogin();
+    } else {
+      setMessage("adminAccountsMessage", error.message || "No se pudieron cargar las cuentas.", true);
+    }
+  }
+}
+
+function wireAccounts() {
+  const table = $("accountTable");
+  if (!table) return;
+  table.addEventListener("click", async (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    const name = button.getAttribute("data-reset");
+    if (!name) return;
+    if (!window.confirm(`¿Generar una contraseña temporal para ${name}?`)) return;
+    try {
+      const payload = await api(
+        `/api/admin/accounts/${encodeURIComponent(name)}/reset-password`,
+        { method: "POST", body: {} },
+      );
+      const value = $("adminTempPasswordValue");
+      if (value) value.textContent = payload.temporaryPassword;
+      const box = $("adminTempPasswordBox");
+      if (box) box.hidden = false;
+      setMessage("adminAccountsMessage", `Contraseña temporal generada para ${name}.`);
+      await loadAccounts();
+    } catch (error) {
+      setMessage("adminAccountsMessage", error.message || "No se pudo resetear.", true);
+    }
+  });
+
+  const copy = $("copyAdminTempPassword");
+  if (copy) {
+    copy.addEventListener("click", async () => {
+      const value = $("adminTempPasswordValue")?.textContent || "";
+      const copied = await copyText(value);
+      copy.textContent = copied ? "COPIADO" : "ERROR";
+      window.setTimeout(() => {
+        copy.textContent = "COPIAR";
+      }, 1500);
+    });
+  }
+}
+
+function wireAdminPassword() {
+  const form = $("adminPasswordForm");
+  if (!form) return;
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if ($("adminNewPassword").value !== $("adminPasswordConfirm").value) {
+      setMessage("adminPasswordMessage", "Las claves nuevas no coinciden.", true);
+      return;
+    }
+    setMessage("adminPasswordMessage", "Cambiando clave…");
+    try {
+      const payload = await api("/api/admin/password", {
+        method: "POST",
+        body: {
+          currentPassword: $("adminCurrentPassword").value,
+          newPassword: $("adminNewPassword").value,
+        },
+      });
+      csrfToken = payload.csrfToken;
+      form.reset();
+      setMessage("adminPasswordMessage", "Clave de administrador cambiada.");
+    } catch (error) {
+      setMessage("adminPasswordMessage", error.message || "No se pudo cambiar.", true);
+    }
+  });
+}
+
 async function copyText(text) {
   const value = String(text || "");
   if (!value) return false;
@@ -191,6 +302,7 @@ function wireLogin() {
       setMessage("adminLoginMessage", "");
       showPanel();
       await loadInvites();
+      await loadAccounts();
     } catch (error) {
       setMessage("adminLoginMessage", error.message || "Clave incorrecta.", true);
     }
@@ -279,6 +391,8 @@ function init() {
   wireLogout();
   wireCreate();
   wireTable();
+  wireAccounts();
+  wireAdminPassword();
   loadMe();
 }
 

@@ -68,8 +68,12 @@ def service(
 
 
 @pytest.fixture
-def admin_service(web_db: WebDatabase, settings: WebSettings) -> AdminService:
-    return AdminService(web_db, settings)
+def admin_service(
+    database: SQLiteAccountDatabase,
+    web_db: WebDatabase,
+    settings: WebSettings,
+) -> AdminService:
+    return AdminService(web_db, settings, database)
 
 
 @pytest.fixture

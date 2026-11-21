@@ -341,6 +341,36 @@ códigos.
 - Tests: `python -m pytest web/tests tests/test_package_clients.py -q`
   → **43 passed**.
 
+## Hito: cambio de contraseña y recuperación gratuita (2026-11-21)
+
+Se agregó seguridad de cuentas sin depender de un servidor de correo.
+
+- **Email obligatorio** para cuentas nuevas (`NFS_WEB_EMAIL_REQUIRED=1`);
+  las cuentas viejas pueden cargarlo desde `/account` con su contraseña.
+- **Cambio de contraseña de usuario** en `/account` (actual + nueva).
+- **Cambio de clave de administrador** en `/admin`; el hash queda en
+  SQLite y el de `web.env` solo se usa como semilla inicial.
+- **Código de recuperación** `NFS-REC-XXXX-XXXX` generado al registrarse
+  y visible una vez; se puede regenerar desde la cuenta.
+- **Olvidé mi contraseña**: cuenta + email + código de recuperación
+  genera una temporal `NFS-TMP-XXXX-XXXX` válida 24 h, que se muestra
+  en la web y obliga a cambiarla al entrar.
+- **Reset desde admin**: `/admin` lista cuentas y genera una temporal
+  para cualquier jugador.
+- Al resetear/recuperar se invalidan las sesiones web de esa cuenta.
+- La temporal vencida se invalida al intentar entrar por la web.
+
+Verificación en el Debian por HTTPS:
+
+- Registro `RecoveryE2E` → código `NFS-REC-...`.
+- `forgot` → temporal `NFS-TMP-...`.
+- Login con temporal → `mustChangePassword=true`.
+- Cambio de contraseña → login con la nueva OK.
+- Reset desde admin → otra temporal y `mustChangePassword=true`.
+- Cuenta de prueba borrada al terminar.
+
+Tests: `python -m pytest web/tests -q` → **47 passed**.
+
 ## Verificación actual
 
 - Servidor:

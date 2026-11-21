@@ -87,12 +87,14 @@ NFS_WEB_PUBLIC_HOST=nfs-fps.duckdns.org
 NFS_WEB_SITE_URL=https://nfs-fps.duckdns.org
 NFS_WEB_DOWNLOADS_DIR=/opt/nfs-online/artifacts/downloads
 NFS_WEB_INVITE_REQUIRED=1
+NFS_WEB_EMAIL_REQUIRED=1
 NFS_WEB_ADMIN_PASSWORD_HASH=pbkdf2_sha256$...
 ```
 
 El panel queda en `https://nfs-fps.duckdns.org/admin`. Ahí se ven,
-crean y revocan invitaciones. El código se guarda en la SQLite para
-poder consultarlo después.
+crean y revocan invitaciones, se listan cuentas y se puede resetear
+la contraseña de un jugador. El código de invitación se guarda en la
+SQLite para poder consultarlo después.
 
 Comprobar:
 
@@ -173,7 +175,7 @@ No abrir `8096`: solo escucha en loopback y NPM llega por la red Docker.
 Si el router reenvía todo (DMZ), el bind loopback es lo que impide que
 `8096` quede público.
 
-## 8. Invitaciones y registro
+## 8. Invitaciones y recuperación
 
 Con `NFS_WEB_INVITE_REQUIRED=1`, crear un código:
 
@@ -186,6 +188,12 @@ python3 tools/create_invite.py --label "amigos" --uses 10 --days 30
 
 Pasarlo a los amigos. El registro queda en
 `https://nfs-fps.duckdns.org/account`.
+
+Cada cuenta nueva recibe un **código de recuperación**. Si olvida la
+contraseña, en `/account` → “Olvidé mi contraseña” ingresa cuenta +
+email + código; la web le muestra una contraseña temporal válida 24 h
+y lo obliga a cambiarla. Si perdió el código, desde `/admin` se puede
+resetear la cuenta y pasarle la temporal.
 
 ## 9. Verificación pública
 

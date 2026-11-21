@@ -120,6 +120,7 @@ class AdminService:
             record.account_id,
             time.time() + 24 * 3600,
         )
+        self.web_db.delete_sessions_for_account(record.account_id)
         self.web_db.audit(
             "admin",
             "admin.account_reset",

@@ -14,7 +14,7 @@
 | Carbon | Fase 1b, pendiente |
 | Servidor local | Corriendo en Docker Desktop (`nfs-server-dev`) |
 | Clientes | Compilados y copiados a las carpetas de U2/MW |
-| Login real | Pendiente de probar |
+| Login real | MW verificado (auth, persona, Messenger y sala); U2 pendiente por Disc 2 |
 | Web `web/` | Pendiente de implementar |
 | Debian/NPM/DuckDNS | Pendiente de desplegar |
 
@@ -65,6 +65,56 @@ Cada paso sigue el ciclo definido en `AGENTS.md`:
     - Hashes verificados contra staging.
 11. `python tools/check_public_tree.py` pasa; el repo no tiene binarios.
 
+## Hito: login de MW + sala (2026-11-21)
+
+- Se lanzó **Most Wanted** y se saltó el intro/attract renombrando temporalmente los videos de `MOVIES` a `.bak` (backup reversible, fuera del repo).
+- Navegación: `Online` → `Usar cuenta de EA existente` → cuenta `testdriver` + contraseña local → persona `TestDriver` → `Carrera rápida` → `Circuito` → `Crear partida`.
+- Evidencia en `logs/classic.log`:
+  - `most_wanted lobby command=auth result=ok close=False`
+  - `most_wanted lobby command=pers result=ok close=False`
+  - `most_wanted lobby command=sele result=selection close=False`
+  - `EA Messenger client connected ...`
+  - `authenticated=1 persona=TestDriver`
+  - `most_wanted lobby command=gcre result=game_created close=False`
+- `runtime/classic-status.json` ahora publica la sala:
+
+```json
+"most_wanted": {
+  "enabled": true,
+  "rooms": [
+    {
+      "id": 1,
+      "name": "TestDriver",
+      "host": "TestDriver",
+      "players": 1,
+      "capacity": 4,
+      "state": "OPEN",
+      "visibility": "PUBLIC",
+      "personas": ["TestDriver"]
+    }
+  ]
+}
+```
+
+- La sala queda abierta esperando el mínimo de 2 jugadores.
+- La cuenta `testdriver` existe en `data/accounts.sqlite3`; su contraseña es local y no se versiona.
+
+### Automatización del juego
+
+La entrada sintética solo funciona si la ventana del juego está en primer plano:
+
+1. `SetForegroundWindow` + `BringWindowToTop` sobre `speed.exe`.
+2. Seleccionar el campo (teclado o clic).
+3. **Enter** para entrar en modo edición.
+4. Escribir con `keybd_event` usando **VK + scancode** (no solo scancode).
+5. **Enter** para confirmar.
+
+Sin el paso de foco, el juego ignora el teclado. Los clics sintéticos no son fiables para los campos de texto; el teclado sí.
+
+### U2
+
+U2 queda bloqueado por el chequeo **“Please insert Disc 2”**. El ISO disponible es el instalador ElAmigos, no el disco de juego. Para probar U2 hace falta el Disco 2 original o un no-CD de una copia propia.
+
 ## Commits de esta etapa
 
 | Commit | Mensaje |
@@ -82,7 +132,7 @@ Este documento y `AGENTS.md` forman parte de este mismo commit.
 - Servidor:
   - `docker exec nfs-server-dev python nfs_online.py status` → `Classic: running`, `Messenger: running in Classic`.
   - `Test-NetConnection 127.0.0.1` OK en `13505`, `20921`, `20922`, `20923`, `30920`, `30921`.
-  - `runtime/classic-status.json` reporta U2 y MW habilitados, sin salas todavía.
+  - `runtime/classic-status.json` reporta U2 y MW habilitados y la sala `TestDriver` de MW (`players=1`, `state=OPEN`).
 - Clientes:
   - Archivos presentes en ambas carpetas.
   - `dinput8.dll` idéntico en U2/MW.
@@ -94,13 +144,23 @@ Este documento y `AGENTS.md` forman parte de este mismo commit.
 
 ## Pendiente inmediato
 
-1. Abrir U2 o MW y probar login online:
-   - Cuenta: `TestDriver`
+1. [x] Abrir MW y probar login online:
+   - Cuenta: `testdriver`
    - Persona: `TestDriver`
    - Contraseña: definida localmente (no versionada).
-2. Revisar `logs/classic.log` y `runtime/classic-status.json` después del login.
-3. Si el cliente no engancha, revisar `net_u2.log` / `net_mw.log` en la carpeta del juego.
-4. Si el login funciona, comenzar la implementación de `web/` según el plan.
+   - Resultado: `auth result=ok`, `pers result=ok`, Messenger autenticado y sala creada.
+2. [ ] Probar la sala con un segundo jugador/cuenta (mínimo 2).
+3. [ ] Resolver U2: Disco 2 o no-CD de una copia propia; luego probar su login.
+4. [ ] Comenzar la implementación de `web/` según el plan.
+
+### Restaurar los videos de MW
+
+Si se quiere devolver el intro original de MW:
+
+```powershell
+Get-ChildItem 'C:\Program Files (x86)\Need for Speed Most Wanted 2005\MOVIES' -Filter '*.vp6.bak' |
+  Rename-Item -NewName { $_.Name -replace '\.bak$','' }
+```
 
 ## Comandos útiles
 
@@ -119,6 +179,9 @@ python tools/check_public_tree.py "$env:TEMP\nfs-clean"
 ## Riesgos conocidos
 
 - Los juegos son repacks de ElAmigos; si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir.
+- U2 pide **Disc 2**; el ISO disponible es el instalador, no el disco de juego.
+- Los videos de intro/attract de MW están renombrados a `.bak` para poder entrar al menú; es reversible.
+- La automatización de teclado solo funciona con la ventana del juego en primer plano; usar `SetForegroundWindow` + `BringWindowToTop`.
 - `python nfs_online.py status` falla en Windows (`WinError 87`); usar la versión dentro del contenedor.
 - Docker Desktop no reproduce el networking exacto de Linux; la prueba final es en el Debian.
 - No ejecutar `nfs_online.py stop` en Windows mientras el stack Docker está activo.

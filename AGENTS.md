@@ -36,7 +36,10 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Cuenta local de prueba `TestDriver` creada (contraseña definida localmente, no versionada).
 - [x] Clientes instalados en las carpetas de U2/MW con UAC; hashes verificados.
 - [x] El árbol commiteado pasa `tools/check_public_tree.py`.
-- [ ] Login real de U2/MW contra el servidor local.
+- [x] Login real de **MW** verificado: `auth result=ok`, persona `TestDriver`, Messenger autenticado y sala creada.
+- [x] `runtime/classic-status.json` publica la sala de MW (`players=1`, `state=OPEN`).
+- [ ] U2 pendiente: pide **Disc 2**; el ISO disponible es el instalador, no el disco de juego.
+- [ ] Probar la sala con un segundo jugador/cuenta.
 - [ ] Implementación de `web/` (registro, landing, leaderboards, admin).
 - [ ] Despliegue en Debian + NPM + DuckDNS.
 - [ ] Fase 1b: Carbon.
@@ -156,8 +159,22 @@ Reglas:
 - Si una prueba del juego requiere tomar mouse/teclado, pedir confirmación antes.
 - Un commit por paso lógico, con mensaje `tipo(scope): resumen` y cuerpo con tests y resultados.
 
+## Automatización del juego en Windows
+
+El juego ignora la entrada sintética si la ventana no está en primer plano. La secuencia que funcionó:
+
+1. `SetForegroundWindow` + `BringWindowToTop` sobre `speed.exe`/`SPEED2.EXE`.
+2. Navegar con scancodes (`keybd_event` con el flag extendido para flechas).
+3. Seleccionar el campo, pulsar **Enter** para entrar en modo edición.
+4. Escribir con `keybd_event` usando **VK + scancode** (no solo scancode).
+5. Pulsar **Enter** para confirmar.
+
+Los clics sintéticos no son fiables para los campos de texto; el teclado sí. Para verificar el resultado, usar `logs/classic.log` y `runtime/classic-status.json`, no solo la pantalla.
+
 ## Problemas conocidos
 
+- **U2:** pide “Please insert Disc 2”. El ISO disponible es el instalador ElAmigos, no el disco de juego. Hace falta el Disco 2 original o un no-CD de una copia propia.
+- **MW:** los videos `attract_movie_*`, `ealogo_*` y `psa_*` de `MOVIES` están renombrados a `.bak` para saltar el intro. Es reversible.
 - `python nfs_online.py status` falla en Windows con `OSError: [WinError 87]` en `os.kill(pid, 0)`. Usar `docker exec nfs-server-dev python nfs_online.py status`.
 - El servidor lanzado con `start --daemon` en Windows no sobrevive al cierre del comando; por eso se usa Docker Desktop.
 - Los juegos son repacks de ElAmigos. Si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir. Si el cliente no engancha, probar con un ejecutable original 1.2/1.3.
@@ -165,7 +182,7 @@ Reglas:
 
 ## Próximo paso
 
-1. Probar login en U2/MW con `TestDriver`.
-2. Revisar `logs/classic.log` y `runtime/classic-status.json`.
-3. Si el login funciona, implementar `web/` siguiendo el plan.
-4. Si no, revisar `net_u2.log` / `net_mw.log` en la carpeta del juego.
+1. [x] Login de MW con `TestDriver`: `auth result=ok`, persona y Messenger autenticados, sala creada.
+2. [ ] Probar la sala con un segundo jugador/cuenta.
+3. [ ] Resolver U2 (Disco 2 o no-CD propio) y probar su login.
+4. [ ] Implementar `web/` siguiendo el plan.

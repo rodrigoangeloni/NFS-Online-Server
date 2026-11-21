@@ -1,0 +1,9 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
+WORKDIR /app
+
+COPY . /app
+RUN chmod +x /app/docker/entrypoint-server.sh
+
+CMD ["/app/docker/entrypoint-server.sh"]

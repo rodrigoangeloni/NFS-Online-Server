@@ -1,0 +1,27 @@
+# Local Docker Desktop stack for U2/MW smoke tests.
+# The nfs-web service is added by the web implementation tasks.
+services:
+  nfs-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    container_name: nfs-server-dev
+    environment:
+      NFS_GAMES: u2,mw
+      NFS_PUBLIC_HOST: 127.0.0.1
+      NFS_LOCAL_IPV4: 127.0.0.1
+      NFS_LOG_LEVEL: INFO
+    ports:
+      - "13505:13505"
+      - "20921:20921"
+      - "20922:20922"
+      - "20923:20923"
+      - "30920:30920"
+      - "30921:30921"
+      - "20000-20005:20000-20005/udp"
+    volumes:
+      - ../data:/app/data
+      - ../runtime:/app/runtime
+      - ../logs:/app/logs
+      - ../config:/app/config:ro
+    restart: unless-stopped

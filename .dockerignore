@@ -1,0 +1,15 @@
+.git
+.github
+docs
+runtime
+logs
+data
+*.iso
+*.bin
+*.cue
+__pycache__
+*.py[cod]
+.pytest_cache
+source/client-zig/.tools
+source/client-zig/.zig-cache
+source/client-zig/zig-out

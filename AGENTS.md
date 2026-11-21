@@ -37,8 +37,8 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Clientes instalados en las carpetas de U2/MW con UAC; hashes verificados.
 - [x] El árbol commiteado pasa `tools/check_public_tree.py`.
 - [x] Login real de **MW** verificado: `auth result=ok`, persona `TestDriver`, Messenger autenticado y sala creada.
-- [x] `runtime/classic-status.json` publica la sala de MW (`players=1`, `state=OPEN`).
-- [ ] U2 pendiente: pide **Disc 2**; el ISO disponible es el instalador, no el disco de juego.
+- [x] Login real de **U2** verificado: `auth result=ok`, `pers result=ok`, Messenger `underground2-classic-messenger` y sala `017.TestDriver` creada.
+- [x] `runtime/classic-status.json` publica la sala de U2 (`players=1`, `capacity=6`, `state=OPEN`).
 - [ ] Probar la sala con un segundo jugador/cuenta.
 - [ ] Implementación de `web/` (registro, landing, leaderboards, admin).
 - [ ] Despliegue en Debian + NPM + DuckDNS.
@@ -167,14 +167,16 @@ El juego ignora la entrada sintética si la ventana no está en primer plano. La
 2. Navegar con scancodes (`keybd_event` con el flag extendido para flechas).
 3. Seleccionar el campo, pulsar **Enter** para entrar en modo edición.
 4. Escribir con `keybd_event` usando **VK + scancode** (no solo scancode).
-5. Pulsar **Enter** para confirmar.
+5. Navegar al siguiente campo con **Down** y repetir.
+6. Seleccionar `Continuar` y pulsar **Enter**.
 
 Los clics sintéticos no son fiables para los campos de texto; el teclado sí. Para verificar el resultado, usar `logs/classic.log` y `runtime/classic-status.json`, no solo la pantalla.
 
 ## Problemas conocidos
 
-- **U2:** pide “Please insert Disc 2”. El ISO disponible es el instalador ElAmigos, no el disco de juego. Hace falta el Disco 2 original o un no-CD de una copia propia.
+- **U2:** el chequeo de **Disc 2** quedó resuelto externamente por el usuario. El ISO disponible es el instalador ElAmigos, no el disco de juego.
 - **MW:** los videos `attract_movie_*`, `ealogo_*` y `psa_*` de `MOVIES` están renombrados a `.bak` para saltar el intro. Es reversible.
+- **U2:** `FMVOpening.vp6`, `ealogo.vp6`, `PSA.vp6` y `THX_logo.vp6` de `MOVIES` están renombrados a `.bak` por el mismo motivo. Es reversible.
 - `python nfs_online.py status` falla en Windows con `OSError: [WinError 87]` en `os.kill(pid, 0)`. Usar `docker exec nfs-server-dev python nfs_online.py status`.
 - El servidor lanzado con `start --daemon` en Windows no sobrevive al cierre del comando; por eso se usa Docker Desktop.
 - Los juegos son repacks de ElAmigos. Si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir. Si el cliente no engancha, probar con un ejecutable original 1.2/1.3.
@@ -183,6 +185,6 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 ## Próximo paso
 
 1. [x] Login de MW con `TestDriver`: `auth result=ok`, persona y Messenger autenticados, sala creada.
-2. [ ] Probar la sala con un segundo jugador/cuenta.
-3. [ ] Resolver U2 (Disco 2 o no-CD propio) y probar su login.
+2. [x] Login de U2 con `TestDriver`: `auth result=ok`, `pers result=ok`, Messenger y sala `017.TestDriver`.
+3. [ ] Probar la sala con un segundo jugador/cuenta.
 4. [ ] Implementar `web/` siguiendo el plan.

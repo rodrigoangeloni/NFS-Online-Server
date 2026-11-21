@@ -14,7 +14,7 @@
 | Carbon | Fase 1b, pendiente |
 | Servidor local | Corriendo en Docker Desktop (`nfs-server-dev`) |
 | Clientes | Compilados y copiados a las carpetas de U2/MW |
-| Login real | MW verificado (auth, persona, Messenger y sala); U2 pendiente por Disc 2 |
+| Login real | MW y U2 verificados (auth, persona, Messenger y sala) |
 | Web `web/` | Pendiente de implementar |
 | Debian/NPM/DuckDNS | Pendiente de desplegar |
 
@@ -111,9 +111,44 @@ La entrada sintética solo funciona si la ventana del juego está en primer plan
 
 Sin el paso de foco, el juego ignora el teclado. Los clics sintéticos no son fiables para los campos de texto; el teclado sí.
 
-### U2
+## Hito: login de U2 + sala (2026-11-21)
 
-U2 queda bloqueado por el chequeo **“Please insert Disc 2”**. El ISO disponible es el instalador ElAmigos, no el disco de juego. Para probar U2 hace falta el Disco 2 original o un no-CD de una copia propia.
+- U2 ya arranca; el chequeo de **Disc 2** quedó resuelto externamente por el usuario.
+- Se saltó el intro renombrando `FMVOpening.vp6`, `ealogo.vp6`, `PSA.vp6` y `THX_logo.vp6` a `.bak` (reversible, fuera del repo).
+- Navegación: `Online` → `Usar cuenta de EA existente` → `testdriver` + contraseña local → persona `TestDriver` → `Punto de encuentro` → `Crear partida` → `Circuito` → `Resort Loop` → `Continuar` → `Aceptar` aviso.
+- Evidencia en `logs/classic.log`:
+  - `underground2 lobby command=auth result=ok close=False`
+  - `underground2 lobby command=pers result=ok close=False`
+  - `EA Messenger ... adapter=underground2-classic-messenger`
+  - `underground2 assigned roomless U2 game to default ranked room: user=573763722 room=A.LAN`
+  - `underground2 U2 game size negotiated: ... applied_min=2 applied_max=6`
+  - `underground2 lobby command=gcre result=game_created close=False`
+- `runtime/classic-status.json` publica la sala de U2:
+
+```json
+"underground2": {
+  "enabled": true,
+  "rooms": [{
+    "id": 1,
+    "name": "017.TestDriver",
+    "host": "TestDriver",
+    "players": 1,
+    "capacity": 6,
+    "state": "OPEN",
+    "visibility": "PUBLIC",
+    "personas": ["TestDriver"]
+  }]
+}
+```
+
+- La sala queda abierta esperando el mínimo de 2 jugadores.
+
+### Restaurar el intro de U2
+
+```powershell
+Get-ChildItem 'C:\Program Files (x86)\Need for Speed Underground 2\MOVIES' -Filter '*.vp6.bak' |
+  Rename-Item -NewName { $_.Name -replace '\.bak$','' }
+```
 
 ## Commits de esta etapa
 
@@ -132,7 +167,7 @@ Este documento y `AGENTS.md` forman parte de este mismo commit.
 - Servidor:
   - `docker exec nfs-server-dev python nfs_online.py status` → `Classic: running`, `Messenger: running in Classic`.
   - `Test-NetConnection 127.0.0.1` OK en `13505`, `20921`, `20922`, `20923`, `30920`, `30921`.
-  - `runtime/classic-status.json` reporta U2 y MW habilitados y la sala `TestDriver` de MW (`players=1`, `state=OPEN`).
+  - `runtime/classic-status.json` reporta U2 y MW habilitados, la sala U2 `017.TestDriver` (`players=1`, `capacity=6`, `state=OPEN`) y MW sin salas.
 - Clientes:
   - Archivos presentes en ambas carpetas.
   - `dinput8.dll` idéntico en U2/MW.
@@ -149,8 +184,9 @@ Este documento y `AGENTS.md` forman parte de este mismo commit.
    - Persona: `TestDriver`
    - Contraseña: definida localmente (no versionada).
    - Resultado: `auth result=ok`, `pers result=ok`, Messenger autenticado y sala creada.
-2. [ ] Probar la sala con un segundo jugador/cuenta (mínimo 2).
-3. [ ] Resolver U2: Disco 2 o no-CD de una copia propia; luego probar su login.
+2. [x] Abrir U2 y probar login online:
+   - Resultado: `auth result=ok`, `pers result=ok`, Messenger `underground2-classic-messenger` y sala `017.TestDriver` creada.
+3. [ ] Probar la sala con un segundo jugador/cuenta (mínimo 2).
 4. [ ] Comenzar la implementación de `web/` según el plan.
 
 ### Restaurar los videos de MW
@@ -179,8 +215,8 @@ python tools/check_public_tree.py "$env:TEMP\nfs-clean"
 ## Riesgos conocidos
 
 - Los juegos son repacks de ElAmigos; si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir.
-- U2 pide **Disc 2**; el ISO disponible es el instalador, no el disco de juego.
-- Los videos de intro/attract de MW están renombrados a `.bak` para poder entrar al menú; es reversible.
+- El chequeo de **Disc 2** de U2 quedó resuelto externamente por el usuario; el ISO disponible es el instalador, no el disco de juego.
+- Los videos de intro/attract de MW y U2 están renombrados a `.bak` para poder entrar al menú; es reversible.
 - La automatización de teclado solo funciona con la ventana del juego en primer plano; usar `SetForegroundWindow` + `BringWindowToTop`.
 - `python nfs_online.py status` falla en Windows (`WinError 87`); usar la versión dentro del contenedor.
 - Docker Desktop no reproduce el networking exacto de Linux; la prueba final es en el Debian.

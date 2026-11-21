@@ -12,6 +12,14 @@ from web.config import WebSettings, load_settings  # noqa: E402
 from web.db import WebDatabase  # noqa: E402
 from web.accounts import AccountService  # noqa: E402
 from web.downloads import DownloadService  # noqa: E402
+from web.app import create_app  # noqa: E402
+
+
+@pytest.fixture
+def client(settings: WebSettings):
+    from fastapi.testclient import TestClient
+
+    return TestClient(create_app(settings), base_url="https://testserver")
 from common.accounts import SQLiteAccountDatabase  # noqa: E402
 
 
@@ -51,3 +59,31 @@ def service(
     settings: WebSettings,
 ) -> AccountService:
     return AccountService(database, web_db, settings)
+
+
+@pytest.fixture
+def downloads(settings: WebSettings) -> DownloadService:
+    filename = "NFS-Online-Client-Pack-v0.2.22.zip"
+    (settings.downloads_dir / filename).write_bytes(b"test-package")
+    manifest = {
+        "downloads": [
+            {
+                "id": "all",
+                "title": "NFS Online Client Pack",
+                "description": "U2 and MW clients",
+                "game": "all",
+                "version": "0.2.22",
+                "recommended": True,
+                "available": True,
+                "filename": filename,
+                "size": 12,
+                "sizeLabel": "12 B",
+                "sha256": "0" * 64,
+            }
+        ]
+    }
+    (settings.downloads_dir / "manifest.json").write_text(
+        __import__("json").dumps(manifest),
+        encoding="utf-8",
+    )
+    return DownloadService(settings.downloads_dir)

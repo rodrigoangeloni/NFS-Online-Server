@@ -364,6 +364,11 @@ Se agregó seguridad de cuentas sin depender de un servidor de correo.
   registro, recuperación y login admin. Detrás de NPM se usa
   `X-Real-IP`/`X-Forwarded-For` solo si la conexión viene de
   `172.28.0.0/16`; si no, se ignora para evitar spoofing.
+- Prueba pública: 5 intentos fallidos → `401`, sexto → `429` con
+  `Retry-After: 60`; el login de admin usa un contador separado y
+  siguió funcionando.
+- Tests actuales: `python -m pytest web/tests tests/test_package_clients.py -q`
+  → **52 passed**.
 
 Verificación en el Debian por HTTPS:
 

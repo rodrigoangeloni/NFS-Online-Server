@@ -1,0 +1,30 @@
+# Production game server container. The web runs in compose.web.yml.
+services:
+  nfs-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    container_name: nfs-server
+    user: "${NFS_UID:-1000}:${NFS_GID:-1000}"
+    environment:
+      NFS_GAMES: ${NFS_GAMES:-u2,mw}
+      NFS_PUBLIC_HOST: ${NFS_PUBLIC_HOST:-nfs-fps.duckdns.org}
+      NFS_LOCAL_IPV4: ${NFS_LOCAL_IPV4:-192.0.2.200}
+      NFS_LOG_LEVEL: INFO
+    # Bypass the router's split-horizon DNS for the public host.
+    dns:
+      - 1.1.1.1
+    ports:
+      - "0.0.0.0:13505:13505"
+      - "0.0.0.0:20921:20921"
+      - "0.0.0.0:20922:20922"
+      - "0.0.0.0:20923:20923"
+      - "0.0.0.0:30920:30920"
+      - "0.0.0.0:30921:30921"
+      - "0.0.0.0:20000-20005:20000-20005/udp"
+    volumes:
+      - ../data:/app/data
+      - ../runtime:/app/runtime
+      - ../logs:/app/logs
+      - ../config:/app/config:ro
+    restart: unless-stopped

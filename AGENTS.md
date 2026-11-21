@@ -14,7 +14,7 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - Fase 1: **U2 + MW**. Carbon queda para Fase 1b.
 - Dominio decidido: **`nfs-fps.duckdns.org`**.
 - Web: FastAPI + Uvicorn en Docker, compartiendo la SQLite oficial de cuentas.
-- Servidor de juego: nativo con systemd en Debian; en esta PC se prueba con Docker Desktop.
+- Servidor de juego: contenedor Docker `nfs-server` en Debian; systemd queda deshabilitado.
 - Proxy TLS: Nginx Proxy Manager (ya instalado en el Debian).
 
 ## Decisiones de arquitectura
@@ -47,7 +47,7 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Web levantada en LAN (`http://192.0.2.37:8096`) dentro de Docker.
 - [x] Registro, descarga e instalación desde la otra PC de la LAN verificados.
 - [x] Sala U2 `016.TestDriver` con 2 jugadores (`DriverD`, `TestDriver`) y carrera sincronizada.
-- [x] Debian desplegado: systemd para el juego, web Docker, NPM y HTTPS público.
+- [x] Debian desplegado: juego Docker + web Docker + NPM y HTTPS público.
 - [x] `https://nfs-fps.duckdns.org` sirve landing, cuenta, descargas y registro con invitación.
 - [x] Panel admin `/admin`: login, listar, crear y revocar invitaciones.
 - [x] Cambio de contraseña de usuario y de admin desde la web.
@@ -223,8 +223,8 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
 
 - Ruta: `/opt/nfs-online/repo` (código), `data/`, `runtime/`, `logs/`,
   `artifacts/downloads/`, `env/nfs.env`.
-- Juego: `nfs-online.service` (systemd, `User=<usuario>`), anuncia
-  `nfs-fps.duckdns.org` y `<IP publica>`.
+- Juego: contenedor `nfs-server` (UID 1000, DNS `1.1.1.1`), anuncia
+  `nfs-fps.duckdns.org` y `<IP publica>`; systemd deshabilitado.
 - Web: contenedor `nfs-web`, loopback `127.0.0.1:8096`, red
   `nginx-proxy-manager-new_default` como `nfs-web:8080`.
 - NPM: `nfs-fps.duckdns.org` → `http://nfs-web:8080`, Force SSL y HTTP/2.

@@ -294,12 +294,13 @@ Se desplegó el servidor en `debian-server` (`192.0.2.200`, público
 
 - Código en `/opt/nfs-online/repo`; datos, runtime, logs, backups,
   env y descargas bajo `/opt/nfs-online/`.
-- Juego nativo con `nfs-online.service`:
-  - `systemctl status nfs-online` → `active (exited)`.
+- Juego en contenedor `nfs-server` (systemd deshabilitado):
+  - DNS `1.1.1.1` para evitar el DNS split-horizon del router.
   - Log: `Public host: nfs-fps.duckdns.org`, IPv4 `<IP publica>`,
     local `192.0.2.200`.
   - Puertos: TCP `13505`, `20921-20923`, `30920-30921`; UDP
     `20000-20005`.
+- Repo Debian: clon git de `main`; actualización con `deploy/update.sh`.
 - UFW: reglas para los puertos de juego; `8096` no se abre.
 - Web:
   - Contenedor `nfs-web`, `127.0.0.1:8096->8080/tcp`, usuario UID 1000.

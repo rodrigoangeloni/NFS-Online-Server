@@ -17,9 +17,10 @@ set +a
 python3 nfs_online.py check
 
 echo "== juego =="
-sudo systemctl restart nfs-online.service
+docker compose -f docker/compose.server.yml up -d --build
 sleep 3
-python3 nfs_online.py status
+docker ps --filter name=nfs-server --format "{{.Names}} {{.Status}} {{.Ports}}"
+docker logs nfs-server --tail 15
 
 echo "== web =="
 docker compose --env-file "$WEB_ENV" -f docker/compose.web.yml up -d --build

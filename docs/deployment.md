@@ -106,21 +106,33 @@ cd /opt/nfs-online/repo
 python3 nfs_online.py check
 ```
 
-## 4. Servicio systemd
+## 4. Servidor de juego en Docker
+
+El servidor de juego corre como contenedor para que aparezca en Portainer y
+pueda cambiarse el puerto publicado sin tocar el puerto interno.
 
 ```bash
-sudo cp /opt/nfs-online/repo/deploy/systemd/nfs-online.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now nfs-online.service
-systemctl status nfs-online.service --no-pager
-python3 nfs_online.py status
+sudo systemctl disable --now nfs-online.service 2>/dev/null || true
+
+cd /opt/nfs-online/repo
+docker compose --env-file /opt/nfs-online/env/nfs.env \
+  -f docker/compose.server.yml up -d --build
+docker ps --filter name=nfs-server --format "{{.Names}} {{.Status}} {{.Ports}}"
+docker logs nfs-server --tail 20
 ```
+
+El contenedor usa `dns: 1.1.1.1` para resolver el dominio público sin que el
+DNS split-horizon del router devuelva `192.0.2.200`.
 
 Logs:
 
 ```bash
+docker logs nfs-server -f
 tail -f /opt/nfs-online/repo/logs/classic.log
 ```
+
+El archivo `deploy/systemd/nfs-online.service` queda como respaldo, pero el
+flujo normal es Docker.
 
 ## 5. Web en Docker
 
@@ -223,8 +235,8 @@ cd /opt/nfs-online/repo
 ./deploy/update.sh
 ```
 
-El script hace `git pull --ff-only`, valida la configuración, reinicia
-`nfs-online.service`, reconstruye la web y verifica `/healthz`.
+El script hace `git pull --ff-only`, valida la configuración, reconstruye
+`nfs-server`, reconstruye `nfs-web` y verifica `/healthz`.
 
 Antes de actualizar, backup:
 

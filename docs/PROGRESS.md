@@ -328,6 +328,11 @@ Se desplegó el servidor en `debian-server` (`192.0.2.200`, público
     juego (transport error esperado al pedir HTTP).
   - `20923` responde `404` (endpoint HTTP de noticias/PREL).
   - `13505` responde `404` (Messenger/PREL).
+- Router: se agregaron `NFS-Online-Msg` (TCP 13505),
+  `NFS-Online-U2` (TCP 20921-20923), `NFS-Online-MW` (TCP 30920-30921)
+  y `NFS-Online-Race` (UDP 20000-20005), todas a `192.0.2.200`.
+  Las reglas existentes (443, Assetto, SNES, etc.) no se tocaron.
+- `8096` sigue cerrado desde Internet.
 - Pendiente: carrera completa desde una conexión externa para confirmar
   el relay UDP `20000-20005`.
 - Invitación de prueba creada en la SQLite del Debian (no versionada).

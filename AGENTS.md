@@ -238,6 +238,10 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   y descarga con SHA-256 correcto.
 - UFW: abiertos TCP `13505`, `20921-20923`, `30920-30921` y UDP
   `20000-20005`; `8096` queda en loopback.
+- Router HG8245W5-6T: reglas `NFS-Online-Msg` (TCP 13505),
+  `NFS-Online-U2` (TCP 20921-20923), `NFS-Online-MW` (TCP 30920-30921)
+  y `NFS-Online-Race` (UDP 20000-20005) a `192.0.2.200`; el resto
+  de reglas quedó intacto.
 - TCP de juego verificados desde Internet; falta la prueba de carrera
   externa para confirmar UDP.
 - Panel admin: `https://nfs-fps.duckdns.org/admin`; usuario `admin` y

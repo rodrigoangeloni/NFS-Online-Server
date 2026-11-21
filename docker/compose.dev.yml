@@ -39,7 +39,7 @@ services:
       NFS_WEB_ALLOW_INSECURE: "1"
       NFS_WEB_INVITE_REQUIRED: ${NFS_WEB_INVITE_REQUIRED:-1}
     ports:
-      - "0.0.0.0:8081:8080"
+      - "0.0.0.0:8096:8080"
     volumes:
       - ../data:/app/data
       - ../runtime:/app/runtime:ro

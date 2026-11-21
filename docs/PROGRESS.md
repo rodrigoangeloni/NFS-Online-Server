@@ -245,11 +245,11 @@ web y verla con `python nfs_online.py account list` funcionó sin errores nuevos
 
 ### Red LAN
 
-- El puerto **8080** ya lo usa otro proyecto (`sbrw-core`); la web NFS quedó en
-  **8081** (`0.0.0.0:8081->8080/tcp`).
+- El puerto **8080** lo usa NFS World (y `sbrw-core` en Windows); Assetto ocupa
+  `8081-8088`; la web NFS quedó en **8096** (`0.0.0.0:8096->8080/tcp`).
 - Reglas de firewall agregadas, limitadas a `192.0.2.0/24`:
-  - `NFS Online web 8080 (LAN)` (queda por compatibilidad).
-  - `NFS Online web 8081 (LAN)`.
+  - `NFS Online web 8080 (LAN)` y `NFS Online web 8081 (LAN)` (pruebas anteriores).
+  - `NFS Online web 8096 (LAN)` (puerto definitivo).
 - `nfs-server-dev` publica los puertos de juego en `0.0.0.0` y se reinició con
   `NFS_PUBLIC_HOST=192.0.2.37` / `NFS_LOCAL_IPV4=192.0.2.37`.
 - Pendiente: instalar el paquete en la otra PC y verificar registro, descarga y
@@ -261,7 +261,7 @@ web y verla con `python nfs_online.py account list` funcionó sin errores nuevos
   - `docker exec nfs-server-dev python nfs_online.py status` → `Classic: running`, `Messenger: running in Classic`.
   - `Test-NetConnection 127.0.0.1` OK en `13505`, `20921`, `20922`, `20923`, `30920`, `30921`.
   - `runtime/classic-status.json` reporta U2 y MW habilitados y sin salas (el jugador salió).
-  - `nfs-server-dev` anuncia `192.0.2.37`; `nfs-web-dev` corre en `http://192.0.2.37:8081`.
+  - `nfs-server-dev` anuncia `192.0.2.37`; `nfs-web-dev` corre en `http://192.0.2.37:8096`.
 - Clientes locales:
   - Archivos presentes en ambas carpetas.
   - `dinput8.dll` idéntico en U2/MW.
@@ -283,7 +283,7 @@ web y verla con `python nfs_online.py account list` funcionó sin errores nuevos
    - Resultado: `auth result=ok`, `pers result=ok`, Messenger `underground2-classic-messenger` y sala `017.TestDriver` creada.
 3. [ ] Probar la sala con un segundo jugador/cuenta (mínimo 2).
 4. [x] Implementar el MVP de `web/` (registro, login, descargas y landing).
-5. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8081`, crear cuenta, descargar e instalar el pack U2 + MW.
+5. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8096`, crear cuenta, descargar e instalar el pack U2 + MW.
 6. [ ] Probar la sala con la segunda PC y confirmar que el servidor anuncia `192.0.2.37`.
 7. [ ] Probar Most Wanted con el Widescreen Fix y DSR en fullscreen.
 

@@ -1,6 +1,6 @@
 param(
     [string]$PublicHost = "192.0.2.37",
-    [int]$Port = 8081,
+    [int]$Port = 8096,
     [switch]$InviteRequired
 )
 

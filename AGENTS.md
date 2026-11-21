@@ -44,7 +44,7 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Login online de U2 verificado después del fix, con `WindowedMode=1` borderless y sala `034.TestDriver`.
 - [x] MVP de `web/`: registro, login, sesiones, descargas, landing y página de cuenta.
 - [x] Paquetes de cliente U2/MW generados con el fix borderless e instalador para no técnicos.
-- [x] Web levantada en LAN (`http://192.0.2.37:8081`) dentro de Docker.
+- [x] Web levantada en LAN (`http://192.0.2.37:8096`) dentro de Docker.
 - [ ] Probar registro, descarga e instalación desde la otra PC de la LAN.
 - [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
 - [ ] Probar la sala con un segundo jugador/cuenta.
@@ -194,17 +194,17 @@ Reglas:
 $env:NFS_PUBLIC_HOST = "192.0.2.37"
 $env:NFS_LOCAL_IPV4 = "192.0.2.37"
 $env:NFS_WEB_PUBLIC_HOST = "192.0.2.37"
-$env:NFS_WEB_SITE_URL = "http://192.0.2.37:8081"
+$env:NFS_WEB_SITE_URL = "http://192.0.2.37:8096"
 $env:NFS_WEB_INVITE_REQUIRED = "0"
 $env:NFS_DOWNLOADS_DIR = "E:/vscode-workspace/NFS-Online-Artifacts/downloads"
 docker compose -f docker/compose.dev.yml up -d --build nfs-web
 ```
 
-- URL LAN: `http://192.0.2.37:8081`.
+- URL LAN: `http://192.0.2.37:8096`.
 - **No** correr `uvicorn` en Windows contra la SQLite viva mientras el
   contenedor del juego la usa: produce `sqlite3.OperationalError: disk I/O error`.
   La web debe correr en Docker con el mismo bind mount `../data`.
-- El puerto **8080** está ocupado por `sbrw-core`; NFS usa **8081**.
+- El puerto **8080** está ocupado por `sbrw-core`/NFS World; Assetto ocupa `8081-8088`; NFS usa **8096**.
 - Registro abierto en la prueba LAN (`NFS_WEB_INVITE_REQUIRED=0`). Para
   invitaciones: `python tools/create_invite.py --uses 5 --days 7`.
 - Paquetes: `python tools/package_clients.py --host 192.0.2.37 ...`; salen en
@@ -236,13 +236,13 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 - Los juegos son repacks de ElAmigos. Si el `.exe` fue modificado por el No-CD, los offsets del plugin pueden no coincidir. Si el cliente no engancha, probar con un ejecutable original 1.2/1.3.
 - Docker Desktop no reproduce exactamente el host networking de Linux; la validación final es en el Debian.
 - La web NFS corre en Docker y comparte `data/accounts.sqlite3` con el servidor. No ejecutar `uvicorn` en Windows contra esa base mientras el contenedor está activo: aparecen `disk I/O error`.
-- El puerto `8080` de esta PC lo ocupa `sbrw-core`; la web NFS usa `8081`.
+- El puerto `8080` lo usa NFS World; Assetto ocupa `8081-8088`; la web NFS usa `8096`.
 - Para LAN, el servidor debe arrancar con `NFS_PUBLIC_HOST=192.0.2.37` y `NFS_LOCAL_IPV4=192.0.2.37`; si no, anuncia `127.0.0.1` y el cliente remoto no encuentra el lobby.
 
 ## Próximo paso
 
 1. [x] Login de MW con `TestDriver`: `auth result=ok`, persona y Messenger autenticados, sala creada.
 2. [x] Login de U2 con `TestDriver`: `auth result=ok`, `pers result=ok`, Messenger y sala `017.TestDriver`.
-3. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8081`, crear cuenta, descargar el pack e instalarlo.
+3. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8096`, crear cuenta, descargar el pack e instalarlo.
 4. [ ] Probar la sala con el segundo jugador y confirmar que el servidor anuncia `192.0.2.37`.
 5. [ ] Completar la web (leaderboards, noticias/TOS, admin) y desplegar en el Debian.

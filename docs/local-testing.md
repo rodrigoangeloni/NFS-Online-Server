@@ -36,16 +36,16 @@ contenedor (eso produce `disk I/O error`).
 $env:NFS_PUBLIC_HOST = "192.0.2.37"
 $env:NFS_LOCAL_IPV4 = "192.0.2.37"
 $env:NFS_WEB_PUBLIC_HOST = "192.0.2.37"
-$env:NFS_WEB_SITE_URL = "http://192.0.2.37:8081"
+$env:NFS_WEB_SITE_URL = "http://192.0.2.37:8096"
 $env:NFS_WEB_INVITE_REQUIRED = "0"
 $env:NFS_DOWNLOADS_DIR = "E:/vscode-workspace/NFS-Online-Artifacts/downloads"
 
 docker compose -f docker/compose.dev.yml up -d --build nfs-web
 ```
 
-Abrir `http://192.0.2.37:8081` desde esta PC o desde otra PC de la LAN.
+Abrir `http://192.0.2.37:8096` desde esta PC o desde otra PC de la LAN.
 
-- El puerto **8081** se usa porque `sbrw-core` ya ocupa el 8080 en esta PC.
+- El puerto **8096** se usa para no chocar con `sbrw-core`/NFS World en `8080` ni con Assetto en `8081-8088`.
 - Registro abierto con `NFS_WEB_INVITE_REQUIRED=0`; en producción debe quedar en `1`.
 - La web escribe en la misma `data/accounts.sqlite3` que el servidor de juego.
 - `tools/run_web.ps1` sirve para trabajar solo en la interfaz; no lo uses contra
@@ -62,7 +62,7 @@ Abrir `http://192.0.2.37:8081` desde esta PC o desde otra PC de la LAN.
 
 ## Puertos del juego
 
-La web usa `8081`. El servidor de juego usa:
+La web usa `8096`. El servidor de juego usa:
 
 - TCP `13505`, `20921`, `20922`, `20923`, `30920`, `30921`.
 - UDP `20000` (relay de carreras).

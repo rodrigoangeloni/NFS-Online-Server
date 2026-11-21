@@ -1,0 +1,20 @@
+[Unit]
+Description=NFS Online classic game server (Underground 2 + Most Wanted)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=<usuario>
+Group=<usuario>
+WorkingDirectory=/opt/nfs-online/repo
+EnvironmentFile=/opt/nfs-online/env/nfs.env
+ExecStart=/usr/bin/python3 nfs_online.py start --games ${NFS_GAMES} --daemon
+ExecStop=/usr/bin/python3 nfs_online.py stop
+TimeoutStartSec=90
+TimeoutStopSec=30
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

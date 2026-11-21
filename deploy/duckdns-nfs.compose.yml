@@ -1,0 +1,15 @@
+name: duckdns-nfs
+
+services:
+  duckdns-nfs:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns-nfs
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: Etc/UTC
+      SUBDOMAINS: nfs-fps.duckdns.org
+      TOKEN: ${DUCKDNS_TOKEN}
+      UPDATE_IP: ipv4
+      LOG_FILE: "false"
+    restart: unless-stopped

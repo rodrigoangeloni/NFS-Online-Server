@@ -226,7 +226,30 @@ sqlite3 /opt/nfs-online/repo/data/accounts.sqlite3 \
   ".backup '/opt/nfs-online/backups/accounts-$(date +%F-%H%M).sqlite3'"
 ```
 
-## 12. Problemas conocidos
+## 12. DuckDNS multi-cuenta
+
+La imagen de LinuxServer usa **un token por contenedor**. El contenedor
+`duckdns` existente actualiza `nextcloud-<usuario>`; no hay que reemplazarlo.
+
+Para `nfs-fps` (otra cuenta DuckDNS):
+
+```bash
+cat > /opt/nfs-online/env/duckdns-nfs.env <<'EOF'
+DUCKDNS_TOKEN=tu_token_de_la_cuenta_nfs_fps
+EOF
+chmod 600 /opt/nfs-online/env/duckdns-nfs.env
+
+cd /opt/nfs-online/repo
+docker compose --env-file /opt/nfs-online/env/duckdns-nfs.env \
+  -f deploy/duckdns-nfs.compose.yml up -d
+docker logs duckdns-nfs --tail 20
+```
+
+El contenedor se llama `duckdns-nfs` y aparece en Portainer. No cambia
+el DNS interno del router: el Static DNS sigue apuntando a
+`192.0.2.200` para la LAN.
+
+## 13. Problemas conocidos
 
 - **No ejecutar `uvicorn` en el host Windows** contra la SQLite viva del
   contenedor: produce `disk I/O error`. En Debian, la web corre en Docker.

@@ -45,9 +45,9 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] MVP de `web/`: registro, login, sesiones, descargas, landing y página de cuenta.
 - [x] Paquetes de cliente U2/MW generados con el fix borderless e instalador para no técnicos.
 - [x] Web levantada en LAN (`http://192.0.2.37:8096`) dentro de Docker.
-- [ ] Probar registro, descarga e instalación desde la otra PC de la LAN.
+- [x] Registro, descarga e instalación desde la otra PC de la LAN verificados.
+- [x] Sala U2 `016.TestDriver` con 2 jugadores (`DriverD`, `TestDriver`) y carrera sincronizada.
 - [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
-- [ ] Probar la sala con un segundo jugador/cuenta.
 - [ ] Completar web: estado en vivo completo, leaderboards, noticias/TOS y admin.
 - [ ] Despliegue en Debian + NPM + DuckDNS.
 - [ ] Fase 1b: Carbon.
@@ -243,6 +243,6 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 
 1. [x] Login de MW con `TestDriver`: `auth result=ok`, persona y Messenger autenticados, sala creada.
 2. [x] Login de U2 con `TestDriver`: `auth result=ok`, `pers result=ok`, Messenger y sala `017.TestDriver`.
-3. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8096`, crear cuenta, descargar el pack e instalarlo.
-4. [ ] Probar la sala con el segundo jugador y confirmar que el servidor anuncia `192.0.2.37`.
+3. [x] Desde la otra PC de la LAN: cuenta `driver4`/`DriverD`, descarga e instalación del pack, entrada a la sala.
+4. [x] Sala `016.TestDriver` con 2 jugadores y carrera sincronizada; relay UDP `20000` con dos clientes.
 5. [ ] Completar la web (leaderboards, noticias/TOS, admin) y desplegar en el Debian.

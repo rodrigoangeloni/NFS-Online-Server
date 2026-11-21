@@ -255,6 +255,38 @@ web y verla con `python nfs_online.py account list` funcionó sin errores nuevos
 - Pendiente: instalar el paquete en la otra PC y verificar registro, descarga y
   entrada a la sala desde allí.
 
+## Hito: prueba LAN completa con 2 jugadores y carrera (2026-11-21)
+
+La segunda PC de la LAN completó el flujo entero:
+
+1. Abrió `http://192.0.2.37:8096`.
+2. Creó la cuenta `driver4` con persona `DriverD`.
+3. Descargó el pack U2 + MW y lo instaló con `INSTALAR.bat`.
+4. Abrió U2, inició sesión y entró a la sala de `TestDriver`.
+5. Inició una carrera y vio el auto de la otra PC.
+
+Evidencia:
+
+- `logs/classic.log`:
+  - Segundo cliente: `underground2 lobby command=auth result=ok`.
+  - `underground2 lobby command=pers result=ok`.
+  - `underground2 lobby command=gjoi result=game_joined`.
+  - `underground2 lobby command=gset result=game_settings`.
+  - `underground2 stock directory reply ... lobby=192.0.2.37:20922`.
+  - Relay de carrera para dos usuarios:
+    - `user=463561769 ... target=100.64.0.1:3658 ... relayed=1`
+    - `user=573763722 ... target=100.64.0.2:3658 ... relayed=1`
+- `runtime/classic-status.json`:
+  - Sala `016.TestDriver`, `players=2`, `capacity=6`, `state=ACTIVE`.
+  - Personas `DriverD` y `TestDriver`.
+  - `last_race_activity_at` actualizado.
+- Web `/api/live`: `totalPlayers=2`, misma sala.
+- Cuenta en SQLite: `account=driver4 persona=DriverD enabled=1`.
+
+Resultado: registro, descarga, instalación, login, sala y carrera de dos jugadores
+funcionando por LAN. No hubo errores nuevos en el servidor; los `disk I/O error`
+del log son de la prueba anterior con la web en Windows.
+
 ## Verificación actual
 
 - Servidor:

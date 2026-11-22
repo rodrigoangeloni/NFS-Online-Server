@@ -1,9 +1,13 @@
 # Despliegue en Debian
 
+> Las IPs y usuarios de este runbook son placeholders. Los valores reales
+> están en `/opt/nfs-online/env/` (Debian) y en
+> `NFS-Online-Artifacts\local-network.md` (fuera del repo).
+
 **Servidor:** `debian-server` (`<usuario>@192.0.2.200`)
 **Dominio:** `nfs-fps.duckdns.org` → `<IP publica>`
 **Web local:** `127.0.0.1:8096` (NPM hace el proxy)
-**Juego:** puertos nativos, sin Docker
+**Juego:** contenedor Docker `nfs-server`
 
 ## 1. Requisitos
 

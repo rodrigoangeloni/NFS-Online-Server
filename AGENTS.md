@@ -1,4 +1,9 @@
-# AGENTS.md — NFS Online Server (fork de el operador)
+# AGENTS.md — NFS Online Server (fork del operador)
+
+> **Datos sensibles:** las IPs, cuentas y usuarios de este documento son
+> placeholders. Los valores reales viven solo en local: `/opt/nfs-online/env/`
+> en el Debian y `E:\vscode-workspace\NFS-Online-Artifacts\local-network.md`
+> (fuera del repo). No versionar.
 
 Este archivo es el contexto operativo para futuros agentes que trabajen en este fork.
 La documentación completa del proyecto está en:

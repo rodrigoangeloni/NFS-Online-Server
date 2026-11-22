@@ -14,7 +14,8 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - Fase 1: **U2 + MW**. Carbon queda para Fase 1b.
 - Dominio decidido: **`nfs-fps.duckdns.org`**.
 - Web: FastAPI + Uvicorn en Docker, compartiendo la SQLite oficial de cuentas.
-- Servidor de juego: contenedor Docker `nfs-server` en Debian; systemd queda deshabilitado.
+- Servidor de juego: contenedor Docker `nfs-server` en Debian; el unit
+  systemd fue eliminado (solo queda Docker).
 - Proxy TLS: Nginx Proxy Manager (ya instalado en el Debian).
 
 ## Decisiones de arquitectura
@@ -224,7 +225,7 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
 - Ruta: `/opt/nfs-online/repo` (código), `data/`, `runtime/`, `logs/`,
   `artifacts/downloads/`, `env/nfs.env`.
 - Juego: contenedor `nfs-server` (UID 1000, DNS `1.1.1.1`), anuncia
-  `nfs-fps.duckdns.org` y `<IP publica>`; systemd deshabilitado.
+  `nfs-fps.duckdns.org` y `<IP publica>`; systemd eliminado.
 - Stack: `nfs-online` con `nfs-server` + `nfs-web`; en Portainer se ven
   en **Containers** (proyecto `nfs-online`).
 - DNS: el router tiene Static DNS de los dominios a `192.0.2.200`

@@ -120,7 +120,11 @@ El stack completo está en `docker/compose.prod.yml`; ambos contenedores
 aparecen en Portainer → **Containers** (proyecto `nfs-online`).
 
 ```bash
+# El servidor de juego ya no usa systemd: se elimina el unit si quedó
+# de la instalación anterior.
 sudo systemctl disable --now nfs-online.service 2>/dev/null || true
+sudo rm -f /etc/systemd/system/nfs-online.service
+sudo systemctl daemon-reload
 
 cd /opt/nfs-online/repo
 docker compose \

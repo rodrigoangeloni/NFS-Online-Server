@@ -428,6 +428,16 @@ Se agregó el botón **BAN/DESBANEAR** en `/admin`, junto a RESET.
 - Tests: `python -m pytest web/tests tests/test_package_clients.py -q`
   → **62 passed**.
 
+## Limpieza: solo Docker en el Debian (2026-11-21)
+
+- Se eliminó el unit `/etc/systemd/system/nfs-online.service`, que
+  había quedado instalado (disabled/inactive) del despliegue previo sin
+  contenedor; luego `daemon-reload` y `reset-failed`.
+- No quedan procesos `nfs_online` en el host. Los puertos de juego los
+  publica `nfs-server` y la web corre en `nfs-web`.
+- Verificación: `systemctl status nfs-online` → unit not found;
+  `docker ps` → `nfs-server` + `nfs-web`; `/healthz` → `{"ok":true}`.
+
 ## Verificación actual
 
 - Servidor:

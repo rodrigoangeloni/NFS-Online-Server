@@ -54,7 +54,9 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Cambio de contraseña de usuario y de admin desde la web.
 - [x] Recuperación con cuenta + email + código y reset desde `/admin`.
 - [x] Email obligatorio para cuentas nuevas.
-- [ ] Probar una partida completa desde fuera de la LAN (UDP `20000-20005`).
+- [x] Partida desde fuera de la LAN: 3 jugadores en `082.DriverA`
+  (`DriverA`, `DriverB`, `DriverC`); relay UDP verificado con el peer
+  público `<IP del jugador externo>`.
 - [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
 - [ ] Completar web: estado en vivo completo, leaderboards y noticias/TOS.
 - [ ] Fase 1b: Carbon.
@@ -247,8 +249,9 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
   `NFS-Online-U2` (TCP 20921-20923), `NFS-Online-MW` (TCP 30920-30921)
   y `NFS-Online-Race` (UDP 20000-20005) a `192.0.2.200`; el resto
   de reglas quedó intacto.
-- TCP de juego verificados desde Internet; falta la prueba de carrera
-  externa para confirmar UDP.
+- TCP de juego verificados desde Internet y carrera externa completada:
+  sala `082.DriverA` con 3 jugadores, uno desde `<IP del jugador externo>`;
+  el relay UDP `20000-20005` reenvió los paquetes de la carrera.
 - Panel admin: `https://nfs-fps.duckdns.org/admin`; usuario `admin` y
   clave hasheada en `NFS_WEB_ADMIN_PASSWORD_HASH` dentro de
   `/opt/nfs-online/env/web.env` (solo como semilla) y luego en SQLite.
@@ -303,4 +306,5 @@ Los clics sintéticos no son fiables para los campos de texto; el teclado sí. P
 2. [x] Login de U2 con `TestDriver`: `auth result=ok`, `pers result=ok`, Messenger y sala `017.TestDriver`.
 3. [x] Desde la otra PC de la LAN: cuenta `driver4`/`DriverD`, descarga e instalación del pack, entrada a la sala.
 4. [x] Sala `016.TestDriver` con 2 jugadores y carrera sincronizada; relay UDP `20000` con dos clientes.
-5. [ ] Completar la web (leaderboards, noticias/TOS, admin) y desplegar en el Debian.
+5. [x] Carrera externa con 3 jugadores (`082.DriverA`): `DriverA` y `DriverB` en la LAN, `DriverC` desde otra red; UDP `20000-20005` confirmado.
+6. [ ] Completar la web (leaderboards, noticias/TOS, admin) y desplegar en el Debian.

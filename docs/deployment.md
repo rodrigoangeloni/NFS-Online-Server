@@ -236,9 +236,10 @@ En este HG8245W5-6T se crearon estas reglas (sin tocar las existentes):
 | `NFS-Online-MW` | TCP | `30920-30921` | `192.0.2.200` |
 | `NFS-Online-Race` | UDP | `20000-20005` | `192.0.2.200` |
 
-Los TCP se verificaron desde Internet; el UDP se confirma con una
-carrera entre dos conexiones distintas. `443` ya estaba reenviado a
-`192.0.2.200`; `8096` no se reenvía.
+Los TCP se verificaron desde Internet y el UDP quedó confirmado con una
+carrera real: sala `082.DriverA` con 3 jugadores, uno desde otra red
+(`<IP del jugador externo>`), y el relay reenviando paquetes. `443` ya estaba
+reenviado a `192.0.2.200`; `8096` no se reenvía.
 
 ## 11. Actualización
 

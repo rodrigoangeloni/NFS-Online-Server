@@ -462,6 +462,21 @@ entra al juego”.
 - Suite: `python -m pytest web/tests tests/test_package_clients.py -q`
   → **63 passed**.
 
+## Hito: carrera externa con 3 jugadores (2026-11-22)
+
+Se completó la prueba que faltaba: un jugador desde **otra red**.
+
+- Sala `082.DriverA`, estado `ACTIVE`, 3 jugadores:
+  - `DriverA` — PC 1, `192.0.2.37`
+  - `DriverB` — PC 2, `192.0.2.90`
+  - `DriverC` — notebook en el WiFi de un familiar, IP pública `<IP del jugador externo>`
+- El relay UDP `20000-20005` reenvió paquetes con `relayed=1` desde
+  `<IP del jugador externo>:48164` hacia los otros dos jugadores.
+- Esto valida el reenvío UDP del router, la regla UFW y la carrera
+  completa de punta a punta.
+- La notebook entró después de cerrar y reabrir U2 tras instalar el pack
+  (el `.asi` no se carga en un juego que ya estaba abierto).
+
 ## Verificación actual
 
 - Servidor:

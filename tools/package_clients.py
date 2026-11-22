@@ -80,7 +80,13 @@ def configure_widescreen_ini(text: str, game: str) -> str:
     updated, count = WINDOWED_LINE.subn(lambda match: match.group(1) + "1", text)
     if count == 0:
         raise PackageError(f"{game}: WidescreenFix.ini has no WindowedMode setting")
-    updated, count = SKIP_INTRO_LINE.subn(lambda match: match.group(1) + "1", updated)
+    # ThirteenAG's MW Widescreen Fix crashes at speed.exe 0x0017dbb3 with
+    # SkipIntro = 1 on some 1.3 builds (WidescreenFixesPack issue #2253).
+    # Keep the intro skip disabled for MW; U2 is unaffected.
+    skip_intro = "0" if game == "mw" else "1"
+    updated, count = SKIP_INTRO_LINE.subn(
+        lambda match: match.group(1) + skip_intro, updated
+    )
     if count == 0:
         raise PackageError(f"{game}: WidescreenFix.ini has no SkipIntro setting")
     if game == "u2":

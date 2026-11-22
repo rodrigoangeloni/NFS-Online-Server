@@ -48,6 +48,7 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Widescreen Fix instalado en U2/MW (solo `scripts/`; el `dinput8.dll` actual no se tocó).
 - [x] U2 probado en ventana 1920x1080 (`WindowedMode=3`) y con resolución DSR 2560x1440.
 - [x] Login online de U2 verificado después del fix, con `WindowedMode=1` borderless y sala `034.TestDriver`.
+- [x] MW: crash de `SkipIntro = 1` diagnosticado (issue #2253) y esquivado con `SkipIntro = 0`; pack 0.2.25 publicado.
 - [x] MVP de `web/`: registro, login, sesiones, descargas, landing y página de cuenta.
 - [x] Paquetes de cliente U2/MW generados con el fix borderless e instalador para no técnicos.
 - [x] Web levantada en LAN (`http://192.0.2.37:8096`) dentro de Docker.
@@ -62,7 +63,7 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Partida desde fuera de la LAN: 3 jugadores en `082.DriverA`
   (`DriverA`, `DriverB`, `DriverC`); relay UDP verificado con el peer
   público `<IP del jugador externo>`.
-- [ ] Login online después del Widescreen Fix en MW y DSR en fullscreen.
+- [ ] Login online después del Widescreen Fix en MW (`SkipIntro = 0`); DSR en fullscreen pendiente.
 - [ ] Completar web: estado en vivo completo, leaderboards y noticias/TOS.
 - [ ] Fase 1b: Carbon.
 
@@ -187,7 +188,10 @@ Reglas:
 - Instalado en `scripts/` de cada juego; solo se copiaron `.asi`, `.ini` y `.dat`/`.tpk`.
 - **No** se reemplazó el `dinput8.dll` actual.
 - U2 `NFSUnderground2.WidescreenFix.ini`: `WindowedMode = 1`, `SkipIntro = 1`, `NoOpticalDriveFix = 1`.
-- MW `NFSMostWanted.WidescreenFix.ini`: `WindowedMode = 1`, `SkipIntro = 1`.
+- MW `NFSMostWanted.WidescreenFix.ini`: `WindowedMode = 1`, `SkipIntro = 0`.
+  Con `SkipIntro = 1`, algunos `speed.exe` 1.3 (MD5 `C0516B48...`) crashean
+  al arrancar en `0x0017dbb3` (issue #2253 de WidescreenFixesPack).
+  El pack fuerza `0`; U2 sigue con `1`.
 - Resultado U2: `WindowedMode = 1` abre borderless 1920x1080 en (0,0) y tapa la barra de tareas; la lista de resolución incluye 2560x1440 (DSR) y se aplicó.
 - `Win+Shift+Left/Right` no mueve la ventana borderless porque el juego captura la tecla Windows; `WindowedMode = 3` sí se puede arrastrar pero muestra borde y barra de tareas.
 - Para multi-monitor: `WindowedMode = 3`; para DSR: `WindowedMode = 0` + resolución DSR.

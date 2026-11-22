@@ -47,7 +47,7 @@ Scaling = 1
 HudAspectRatioConstraint = Auto
 
 [MISC]
-SkipIntro = 1
+SkipIntro = 0   ; 1 crashea algunos speed.exe 1.3 (issue #2253)
 WindowedMode = 0   ; 0 = Fullscreen | 1 = Borderless | 2 = Border | 3 = Resizable Border | 4 = Borderless Fullscreen | 5 = Borderless Fullscreen Stretched
 ```
 
@@ -96,7 +96,8 @@ No hay una clave `Resolution` en el INI: el fix hace que el juego vea los modos 
 2. Extraer **solo la carpeta `scripts/`** dentro de la carpeta del juego, al lado de `SPEED2.EXE` / `speed.exe`.
 3. **No sobrescribir** el `dinput8.dll` que ya tenemos: nuestro ASI Loader actual carga los `.asi` desde `scripts/`.
 4. Configurar el INI:
-   - `SkipIntro = 1`
+   - MW: `SkipIntro = 0` (con `1` crashea el `speed.exe` 1.3 del issue #2253).
+   - U2: `SkipIntro = 1`.
    - `WindowedMode = 3` para la primera prueba multi-monitor.
    - U2: `NoOpticalDriveFix = 1`.
 5. Probar:
@@ -112,7 +113,7 @@ Si el fix no carga con nuestro loader, usar el `dinput8.dll` del pack (es el mis
 - `net_u2.asi` / `net_mw.asi` parchean red; el Widescreen Fix parchea render/HUD/FOV/ventana. Son responsabilidades distintas y deberían convivir.
 - El orden de carga del ASI Loader no debería importar, pero hay que probar login y sala después de instalar.
 - No combinar con **NFSMW Extra Options** si ambos tocan resolución/ventana; para este objetivo alcanza con Widescreen Fix.
-- Los videos de intro renombrados a `.bak` se pueden restaurar y dejar que `SkipIntro = 1` haga el trabajo. Si el fix no los salta, mantener los `.bak`.
+- Los videos de intro renombrados a `.bak` se pueden restaurar y dejar que `SkipIntro = 1` haga el trabajo en U2. En MW usar `SkipIntro = 0`: con `1` algunos `speed.exe` 1.3 crashean (issue #2253); si se quieren saltar los videos, mantener los `.bak`.
 
 ## Plan de prueba
 
@@ -131,6 +132,7 @@ Instalado en U2/MW:
 - Solo se copió la carpeta `scripts/` de cada release.
 - **No se reemplazó** el `dinput8.dll` actual; el ASI Loader existente cargó el Widescreen Fix.
 - Configuración inicial: `WindowedMode = 3`, `SkipIntro = 1`; en U2 `NoOpticalDriveFix = 1`.
+- MW se cambió a `SkipIntro = 0` el 2026-11-22 por el crash del issue #2253 (ver abajo).
 
 U2:
 
@@ -162,6 +164,20 @@ Pendiente de esta prueba:
 - Repetir login online con el fix cargado.
 - Probar DSR en fullscreen (`WindowedMode = 0`) para confirmar el downsample del driver.
 - Repetir la prueba en Most Wanted.
+
+## Corrección: MW crashea con SkipIntro = 1 (2026-11-22)
+
+En la PC 1 (Windows, `speed.exe` 1.3 de 6,029,312 bytes, MD5
+`C0516B485065FABDD69579816B5DF763`) el juego crasheaba al arrancar:
+
+- `Application Error` 1000: `speed.exe`, `0xc0000005`, offset `0x0017dbb3`.
+- Sin el Widescreen Fix, el juego arranca.
+- Con `WindowedMode = 4` sigue crasheando.
+- Con `SkipIntro = 0` y `WindowedMode = 1` arranca y se mantuvo 20 s sin crash.
+
+Es el issue #2253 de WidescreenFixesPack. El pack 0.2.24 traía
+`SkipIntro = 1`; el generador ahora fuerza `0` en MW
+(`tools/package_clients.py`) y el test lo verifica. U2 no está afectado.
 
 ## Riesgos
 

@@ -477,6 +477,34 @@ Se completó la prueba que faltaba: un jugador desde **otra red**.
 - La notebook entró después de cerrar y reabrir U2 tras instalar el pack
   (el `.asi` no se carga en un juego que ya estaba abierto).
 
+## Fix: MW crasheaba al arrancar con el Widescreen Fix (2026-11-22)
+
+La PC 1 (`192.0.2.37`, `DriverA`) no abría Most Wanted: `speed.exe`
+crasheaba con `0xc0000005` en el offset `0x0017dbb3` antes de llegar al
+login. El `speed.exe` es de 6,029,312 bytes, MD5
+`C0516B485065FABDD69579816B5DF763`.
+
+Pruebas de aislamiento:
+
+- Sin `scripts\NFSMostWanted.WidescreenFix.asi`: el juego arranca y sigue vivo.
+- Con el fix y `WindowedMode = 1` o `4`: crashea en el mismo offset.
+- Con `SkipIntro = 0` y `WindowedMode = 1`: arranca y se mantuvo 20 s sin crash.
+
+Es el issue #2253 de WidescreenFixesPack: `SkipIntro = 1` dispara el crash
+en esa build de `speed.exe`. El pack 0.2.24 traía `1`; ahora
+`tools/package_clients.py` fuerza `0` para MW y
+`tests/test_package_clients.py` lo verifica. U2 sigue con `SkipIntro = 1`.
+
+- Pack **0.2.25** generado y publicado: `/api/connect` lista 0.2.25 y
+  `/downloads/mw` devuelve SHA-256
+  `edc7a76d4bb46267f57e9de91190a1f667902b00935a5ef763610267555b93e7`.
+
+Estado de las otras PCs esa noche:
+
+- PC 2 (`192.0.2.90`, `DriverB`): el juego abre, pero el servidor respondió
+  `bad_password` y luego `locked` por 5 minutos. Pendiente de reset/verificación.
+- Notebook externa (`DriverC`): `auth=ok`, `pers=ok` y sala creada.
+
 ## Verificación actual
 
 - Servidor:
@@ -507,7 +535,8 @@ Se completó la prueba que faltaba: un jugador desde **otra red**.
 4. [x] Implementar el MVP de `web/` (registro, login, descargas y landing).
 5. [ ] Desde la otra PC de la LAN: abrir `http://192.0.2.37:8096`, crear cuenta, descargar e instalar el pack U2 + MW.
 6. [ ] Probar la sala con la segunda PC y confirmar que el servidor anuncia `192.0.2.37`.
-7. [ ] Probar Most Wanted con el Widescreen Fix y DSR en fullscreen.
+7. [x] Probar Most Wanted con el Widescreen Fix y `SkipIntro = 0`.
+8. [ ] Probar DSR en fullscreen.
 
 ### Restaurar los videos de MW
 

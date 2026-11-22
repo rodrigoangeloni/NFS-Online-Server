@@ -105,7 +105,8 @@ def test_package_contains_both_games_fix_and_manifest(tmp_path: Path) -> None:
         assert "SkipIntro = 1" in u2_ini
         assert "NoOpticalDriveFix = 1" in u2_ini
         assert "WindowedMode = 1" in mw_ini
-        assert "SkipIntro = 1" in mw_ini
+        # MW keeps SkipIntro off: 1 crashes some 1.3 speed.exe builds (#2253).
+        assert "SkipIntro = 0" in mw_ini
         client_ini = archive.read("U2/net_u2.ini").decode()
         assert "host = 192.0.2.37" in client_ini
         assert "127.0.0.1" not in client_ini

@@ -524,6 +524,12 @@ completa `python -m pytest web/tests tests/test_package_clients.py -q`
 → **65 passed**. La imagen no va al repo; el checker del árbol público
 sigue OK.
 
+Verificado en producción:
+
+- `/og-image.jpg` → 200, `image/jpeg`, 74,141 bytes; SHA-256
+  `DD6B097CD46FEB9FE16B9F1524830D21420C841775D2CE2C8693AD67CA8E4180`.
+- La landing pública incluye `og:image`, `og:title` y `twitter:card`.
+
 ## Verificación actual
 
 - Servidor:

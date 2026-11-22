@@ -501,9 +501,12 @@ en esa build de `speed.exe`. El pack 0.2.24 traía `1`; ahora
 
 Estado de las otras PCs esa noche:
 
-- PC 2 (`192.0.2.90`, `DriverB`): el juego abre, pero el servidor respondió
-  `bad_password` y luego `locked` por 5 minutos. Pendiente de reset/verificación.
+- PC 2 (`192.0.2.90`, `DriverB`): el juego abre; tras vencer el bloqueo de
+  5 minutos volvió a autenticar (`auth=ok` a las 01:52).
+- PC 1 (`192.0.2.37`, `DriverA`): después del fix, `auth=ok` a las 01:53.
 - Notebook externa (`DriverC`): `auth=ok`, `pers=ok` y sala creada.
+
+Los tres logins de MW quedaron verificados: PC 1, PC 2 y notebook externa.
 
 ## Social preview: imagen para compartir (2026-11-22)
 

@@ -63,7 +63,8 @@ Volver a jugar online con amigos a **Need for Speed Underground 2** y **Most Wan
 - [x] Partida desde fuera de la LAN: 3 jugadores en `082.DriverA`
   (`DriverA`, `DriverB`, `DriverC`); relay UDP verificado con el peer
   público `<IP del jugador externo>`.
-- [ ] Login online después del Widescreen Fix en MW (`SkipIntro = 0`); DSR en fullscreen pendiente.
+- [x] Login online de MW después del Widescreen Fix (`SkipIntro = 0`) en PC 1 y PC 2.
+- [ ] DSR en fullscreen en MW.
 - [ ] Completar web: estado en vivo completo, leaderboards y noticias/TOS.
 - [ ] Fase 1b: Carbon.
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -73,13 +73,22 @@ def create_app(settings: WebSettings | None = None) -> FastAPI:
     def admin_page() -> FileResponse:
         return _page(active.static_dir / "admin.html")
 
+    @app.get("/og-image.jpg", include_in_schema=False)
+    def og_image() -> FileResponse:
+        path = active.downloads_dir / "og-image.jpg"
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="og image not found")
+        return FileResponse(
+            path,
+            media_type="image/jpeg",
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
     return app
 
 
 def _page(path: Path) -> FileResponse:
     if not path.is_file():
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=404, detail="page not found")
     return FileResponse(path)
 

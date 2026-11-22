@@ -505,6 +505,25 @@ Estado de las otras PCs esa noche:
   `bad_password` y luego `locked` por 5 minutos. Pendiente de reset/verificación.
 - Notebook externa (`DriverC`): `auth=ok`, `pers=ok` y sala creada.
 
+## Social preview: imagen para compartir (2026-11-22)
+
+La landing no tenía imagen Open Graph: al compartir el link solo aparecía
+texto. Se agregó:
+
+- `tools/make_og_image.py` genera un JPEG 1200x630 con la paleta de la web
+  (negro, verde ácido, Bahnschrift): marca `NFS ONLINE`, `UNDERGROUND 2` +
+  `MOST WANTED`, velocímetro y `nfs-fps.duckdns.org`.
+- El JPEG vive fuera del repo: `NFS-Online-Artifacts/downloads/og-image.jpg`
+  (74 KB). La web lo sirve en `/og-image.jpg` desde el directorio de descargas.
+- `web/static/index.html` incluye Open Graph y Twitter Card
+  (`summary_large_image`) con URLs absolutas a `https://nfs-fps.duckdns.org`.
+- `web/app.py` agrega la ruta `/og-image.jpg` (404 si el artefacto falta).
+
+Tests: `python -m pytest web/tests/test_pages.py -q` → 6 passed; suite
+completa `python -m pytest web/tests tests/test_package_clients.py -q`
+→ **65 passed**. La imagen no va al repo; el checker del árbol público
+sigue OK.
+
 ## Verificación actual
 
 - Servidor:

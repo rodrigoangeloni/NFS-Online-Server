@@ -8,12 +8,28 @@ def test_landing_and_static_assets(client: TestClient) -> None:
     assert page.status_code == 200
     assert 'id="downloadGrid"' in page.text
     assert 'id="copyServerAddress"' in page.text
+    assert 'property="og:image"' in page.text
+    assert "https://nfs-fps.duckdns.org/og-image.jpg" in page.text
+    assert 'name="twitter:card"' in page.text
     css = client.get("/static/styles.css")
     assert css.status_code == 200
     assert "--acid" in css.text
     script = client.get("/static/app.js")
     assert script.status_code == 200
     assert "refreshAll" in script.text
+
+
+def test_og_image_is_served(client: TestClient, settings) -> None:
+    (settings.downloads_dir / "og-image.jpg").write_bytes(b"fake-jpeg")
+    response = client.get("/og-image.jpg")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/jpeg"
+    assert response.content == b"fake-jpeg"
+
+
+def test_og_image_missing_returns_404(client: TestClient) -> None:
+    response = client.get("/og-image.jpg")
+    assert response.status_code == 404
 
 
 def test_account_page_has_forms(client: TestClient) -> None:

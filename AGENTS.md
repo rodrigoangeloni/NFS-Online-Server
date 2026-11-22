@@ -204,8 +204,12 @@ Reglas:
   `web/api.py`, `web/security.py`, `web/app.py`.
 - Frontend: `web/static/index.html`, `account.html`, `styles.css`, `app.js`,
   `account.js`.
+- Preview social: `web/static/index.html` incluye Open Graph/Twitter;
+  la web sirve `artifacts/downloads/og-image.jpg` en `/og-image.jpg`
+  (1200x630, JPEG ~74 KB). Generador: `tools/make_og_image.py`.
+  La imagen no va en el repo; se copia al Debian como los packs.
 - Prueba completa: `python -m pytest web/tests tests/test_package_clients.py -q`
-  → 34 passed.
+  → 65 passed.
 - Correr en Docker (recomendado):
 
 ```powershell

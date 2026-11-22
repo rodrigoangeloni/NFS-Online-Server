@@ -96,7 +96,8 @@ NFS_WEB_ADMIN_PASSWORD_HASH=pbkdf2_sha256$...
 El panel queda en `https://nfs-fps.duckdns.org/admin`. El usuario por
 defecto es `admin`; la clave es la que generaste. Ahí se ven,
 crean y revocan invitaciones, se listan cuentas y se puede resetear
-la contraseña de un jugador. El código de invitación se guarda en la
+la contraseña de un jugador o **banearlo/desbanearlo**. El baneo
+desconecta al piloto del juego y le invalida la sesión web. El código de invitación se guarda en la
 SQLite para poder consultarlo después.
 
 `NFS_WEB_ADMIN_PASSWORD_HASH` es **solo la semilla inicial**. Cuando se

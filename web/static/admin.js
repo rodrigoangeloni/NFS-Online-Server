@@ -175,6 +175,7 @@ function renderAccounts(accounts) {
         <td><span class="status-pill ${statusClass}">${escapeHtml(state)}</span></td>
         <td class="admin-actions">
           <button class="icon-btn" type="button" data-reset="${escapeHtml(account.accountName)}">RESET</button>
+          <button class="icon-btn${account.banned ? "" : " icon-btn-danger"}" type="button" data-ban="${escapeHtml(account.accountName)}" data-banned="${account.banned ? "1" : "0"}">${account.banned ? "DESBANEAR" : "BAN"}</button>
         </td>
       </tr>`;
     })
@@ -200,6 +201,34 @@ function wireAccounts() {
   table.addEventListener("click", async (event) => {
     const button = event.target.closest("button");
     if (!button) return;
+
+    const banName = button.getAttribute("data-ban");
+    if (banName) {
+      const isBanned = button.getAttribute("data-banned") === "1";
+      const question = isBanned
+        ? `¿Desbanear a ${banName}? Va a poder volver a entrar.`
+        : `¿Banear a ${banName}? Se lo desconecta ahora y no va a poder volver a entrar.`;
+      if (!window.confirm(question)) return;
+      try {
+        await api(
+          `/api/admin/accounts/${encodeURIComponent(banName)}/${isBanned ? "unban" : "ban"}`,
+          { method: "POST", body: {} },
+        );
+        setMessage(
+          "adminAccountsMessage",
+          isBanned ? `${banName} fue desbaneada.` : `${banName} fue baneada.`,
+        );
+        await loadAccounts();
+      } catch (error) {
+        setMessage(
+          "adminAccountsMessage",
+          error.message || "No se pudo cambiar el baneo.",
+          true,
+        );
+      }
+      return;
+    }
+
     const name = button.getAttribute("data-reset");
     if (!name) return;
     if (!window.confirm(`¿Generar una contraseña temporal para ${name}?`)) return;

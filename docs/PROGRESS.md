@@ -415,6 +415,19 @@ especificado no es válido” y el servidor no registraba ningún intento;
   no se recordaba. Se restauró el hash semilla de `web.env`
   (`<clave-admin>`) y se verificó con `POST /api/admin/login` → 200.
 
+## Panel admin: BAN y DESBANEAR (2026-11-21)
+
+Se agregó el botón **BAN/DESBANEAR** en `/admin`, junto a RESET.
+
+- `AdminService.set_account_banned` marca `accounts.banned`, escribe el
+  evento `ban`/`unban` en `account_policy_events` e invalida las
+  sesiones web de esa cuenta. El servidor de juego lee el evento y
+  desconecta al piloto en ~1 s.
+- Rutas: `POST /api/admin/accounts/{cuenta}/ban` y `/unban`, con CSRF.
+- La tabla muestra `baneada` en rojo y el botón cambia a DESBANEAR.
+- Tests: `python -m pytest web/tests tests/test_package_clients.py -q`
+  → **62 passed**.
+
 ## Verificación actual
 
 - Servidor:

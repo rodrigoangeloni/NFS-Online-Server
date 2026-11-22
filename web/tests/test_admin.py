@@ -4,6 +4,7 @@ from dataclasses import replace
 
 import pytest
 
+from common.enforcement import SQLiteAccountPolicyEventStore
 from web.admin import AdminAuthError, AdminService
 
 
@@ -62,6 +63,34 @@ def test_admin_can_change_password(admin_service: AdminService) -> None:
     with pytest.raises(AdminAuthError):
         admin_service.login("admin", "admin-test-password")
     assert admin_service.login("admin", "new-admin-password")[0]
+
+
+def test_admin_can_ban_and_unban_accounts(admin_service: AdminService) -> None:
+    assert admin_service.database is not None
+    admin_service.database.create_account("Driver", "secret123", email="driver@example.com")
+    account = admin_service.database.resolve_account("Driver")
+    assert account is not None
+    web_token, _ = admin_service.web_db.create_session(account.account_id)
+    assert admin_service.web_db.session(web_token) is not None
+
+    banned = admin_service.set_account_banned("Driver", True)
+    assert banned["banned"] is True
+    assert admin_service.database.resolve_account("Driver").banned is True
+    assert admin_service.web_db.session(web_token) is None
+    assert admin_service.list_accounts()[0]["banned"] is True
+    events = SQLiteAccountPolicyEventStore(admin_service.database).events_after(0)
+    assert [event.action for event in events] == ["ban"]
+
+    unbanned = admin_service.set_account_banned("Driver", False)
+    assert unbanned["banned"] is False
+    assert admin_service.database.resolve_account("Driver").banned is False
+    events = SQLiteAccountPolicyEventStore(admin_service.database).events_after(0)
+    assert [event.action for event in events] == ["ban", "unban"]
+
+
+def test_admin_ban_rejects_unknown_account(admin_service: AdminService) -> None:
+    with pytest.raises(ValueError):
+        admin_service.set_account_banned("Ghost", True)
 
 
 def test_admin_lists_and_resets_accounts(admin_service: AdminService) -> None:

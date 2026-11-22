@@ -133,6 +133,26 @@ class AdminService:
         )
         return temporary
 
+    def set_account_banned(self, account_name: str, banned: bool) -> dict[str, object]:
+        if self.database is None:
+            raise ValueError("account database not configured")
+        record = self.database.resolve_account(account_name)
+        if record is None:
+            raise ValueError("La cuenta no existe.")
+        updated = self.database.set_banned(record.account_name, bool(banned))
+        self.web_db.delete_sessions_for_account(record.account_id)
+        self.web_db.audit(
+            "admin",
+            "admin.account_ban" if banned else "admin.account_unban",
+            {"accountId": record.account_id, "accountName": record.account_name},
+        )
+        return {
+            "accountId": updated.account_id,
+            "accountName": updated.account_name,
+            "banned": updated.banned,
+            "enabled": updated.enabled,
+        }
+
     def list_invites(self) -> list[dict[str, object]]:
         now = time.time()
         result: list[dict[str, object]] = []

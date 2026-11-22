@@ -436,6 +436,26 @@ def build_router(
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return {"ok": True, "temporaryPassword": temporary}
 
+    @router.post("/api/admin/accounts/{account_name}/ban")
+    def admin_ban_account(request: Request, account_name: str) -> dict[str, Any]:
+        session = admin_session(request)
+        require_csrf(request, session)
+        try:
+            account = admin.set_account_banned(account_name, True)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return {"ok": True, "account": account}
+
+    @router.post("/api/admin/accounts/{account_name}/unban")
+    def admin_unban_account(request: Request, account_name: str) -> dict[str, Any]:
+        session = admin_session(request)
+        require_csrf(request, session)
+        try:
+            account = admin.set_account_banned(account_name, False)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return {"ok": True, "account": account}
+
     @router.get("/api/admin/invites")
     def admin_invites(request: Request) -> dict[str, Any]:
         admin_session(request)

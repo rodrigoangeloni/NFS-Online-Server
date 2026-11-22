@@ -178,13 +178,13 @@ function Backup-File([string]$Path, [string]$BackupDir, [string]$Relative) {
     }
 }
 
-function Set-IniHost([string]$Path, [string]$Host) {
+function Set-IniHost([string]$Path, [string]$HostName) {
     $lines = Get-Content -LiteralPath $Path
     $matched = $false
     $updated = foreach ($line in $lines) {
         if ($line -match '^(\s*host\s*=\s*).*$') {
             $matched = $true
-            $Matches[1] + $Host
+            $Matches[1] + $HostName
         }
         else {
             $line

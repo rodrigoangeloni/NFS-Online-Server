@@ -449,13 +449,18 @@ entra al juego”.
 - `tools/package_clients.py` agrega `host.txt` con el host del build.
 - `packaging/client/install.ps1` lee `host.txt` y reescribe las líneas
   `host =` de `net_u2.ini`/`net_mw.ini` después de copiarlas.
-- Tests nuevos en `tests/test_package_clients.py` (host.txt presente y
-  usado por el instalador).
-- Pack publicado: **0.2.23** (binarios de cliente 0.2.22 + instalador
+- Tests nuevos en `tests/test_package_clients.py`; uno de punta a punta
+  extrae el pack, corre `install.ps1` contra carpetas de juego falsas con
+  un INI viejo y verifica que ambas queden con el host del pack.
+- Ese test encontró que `$Host` es una variable reservada de PowerShell;
+  el parámetro se renombró a `$HostName`.
+- Pack publicado: **0.2.24** (binarios de cliente 0.2.22 + instalador
   nuevo). SHA-256 del pack completo:
-  `d422bd684b5af272e2b8d18353c5a8f0c48bf421286015892125eb0f27c64406`.
-- Verificado por HTTPS: `/api/connect` lista 0.2.23 y la descarga tiene
+  `1d9829fe69339ad622413e2b40e6068522c6f5de183b33130bfa65ea2507daaa`.
+- Verificado por HTTPS: `/api/connect` lista 0.2.24 y la descarga tiene
   el mismo SHA-256.
+- Suite: `python -m pytest web/tests tests/test_package_clients.py -q`
+  → **63 passed**.
 
 ## Verificación actual
 

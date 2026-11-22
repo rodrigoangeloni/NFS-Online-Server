@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 import zipfile
 
 import pytest
@@ -170,3 +172,57 @@ def test_invalid_host_is_rejected(tmp_path: Path) -> None:
             clients_dir=inputs["clients"],
             widescreen_dir=inputs["fixes"],
         )
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="install.ps1 is PowerShell")
+def test_installer_forces_pack_host_on_fake_games(tmp_path: Path) -> None:
+    inputs = fake_inputs(tmp_path)
+    out = tmp_path / "out"
+    package_clients(
+        "nfs.example.com",
+        inputs["asi"],
+        out,
+        "0.2.24",
+        asi_loader=inputs["loader"],
+        clients_dir=inputs["clients"],
+        widescreen_dir=inputs["fixes"],
+    )
+
+    pack_dir = tmp_path / "pack"
+    with zipfile.ZipFile(out / "NFS-Online-Client-Pack-v0.2.24.zip") as archive:
+        archive.extractall(pack_dir)
+
+    u2 = tmp_path / "u2"
+    mw = tmp_path / "mw"
+    u2.mkdir()
+    mw.mkdir()
+    (u2 / "SPEED2.EXE").write_bytes(b"")
+    (mw / "speed.exe").write_bytes(b"")
+    old_ini = "[network]\nhost = 192.0.2.37\n\n[lan]\nhost = 192.0.2.37\n"
+    (u2 / "net_u2.ini").write_text(old_ini, encoding="utf-8")
+    (mw / "net_mw.ini").write_text(old_ini, encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(pack_dir / "install.ps1"),
+            "-NoElevate",
+            "-NoPause",
+            "-U2Path",
+            str(u2),
+            "-MWPath",
+            str(mw),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    for ini in (u2 / "net_u2.ini", mw / "net_mw.ini"):
+        text = ini.read_text(encoding="utf-8")
+        assert "host = nfs.example.com" in text
+        assert "192.0.2.37" not in text

@@ -90,11 +90,13 @@ def test_package_contains_both_games_fix_and_manifest(tmp_path: Path) -> None:
         names = set(archive.namelist())
         assert "INSTALAR.bat" in names
         assert "LEEME.txt" in names
+        assert "host.txt" in names
         assert "loader/dinput8.dll" in names
         assert "U2/net_u2.asi" in names
         assert "U2/scripts/NFSUnderground2.WidescreenFix.ini" in names
         assert "MW/net_mw.asi" in names
         assert "MW/scripts/NFSMostWanted.WidescreenFix.ini" in names
+        assert archive.read("host.txt").decode().strip() == "192.0.2.37"
         u2_ini = archive.read("U2/scripts/NFSUnderground2.WidescreenFix.ini").decode()
         mw_ini = archive.read("MW/scripts/NFSMostWanted.WidescreenFix.ini").decode()
         assert "WindowedMode = 1" in u2_ini
@@ -108,6 +110,9 @@ def test_package_contains_both_games_fix_and_manifest(tmp_path: Path) -> None:
         readme = archive.read("LEEME.txt").decode()
         assert "192.0.2.37" in readme
         assert "NFS-Online" in readme
+        installer = archive.read("install.ps1").decode()
+        assert "host.txt" in installer
+        assert "Set-IniHost" in installer
 
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
     ids = [entry["id"] for entry in manifest["downloads"]]
@@ -137,6 +142,7 @@ def test_per_game_zip_contains_only_its_game(tmp_path: Path) -> None:
         assert any(name.startswith("U2/") for name in names)
         assert not any(name.startswith("MW/") for name in names)
         assert "INSTALAR.bat" in names
+        assert "host.txt" in names
 
 
 def test_missing_asi_fails_with_clear_message(tmp_path: Path) -> None:

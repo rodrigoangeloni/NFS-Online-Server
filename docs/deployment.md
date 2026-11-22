@@ -48,6 +48,12 @@ python tools/package_clients.py `
 scp "$env:TEMP\nfs-downloads\*" debian:/opt/nfs-online/artifacts/downloads/
 ```
 
+El pack incluye `host.txt` con el valor de `--host`. `install.ps1` lo lee
+y reescribe las líneas `host =` de `net_u2.ini` y `net_mw.ini` después de
+copiarlas, así que un INI viejo o editado no deja al cliente apuntando a
+otro servidor. Para cambiar de servidor, regenerar el pack con el
+`--host` correcto; no hace falta editar los ZIP a mano.
+
 ## 3. Configuración del servidor
 
 ```bash

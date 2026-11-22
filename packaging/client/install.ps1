@@ -9,6 +9,17 @@ param(
 $ErrorActionPreference = 'Stop'
 $script:Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# El pack trae host.txt con el servidor para el que fue generado. Si esta,
+# el instalador fuerza ese dominio en el INI aunque el archivo venga viejo.
+$script:ConfiguredHost = ""
+$hostFile = Join-Path $script:Root "host.txt"
+if (Test-Path -LiteralPath $hostFile -PathType Leaf) {
+    $script:ConfiguredHost = (Get-Content -LiteralPath $hostFile -TotalCount 1).Trim()
+}
+if ($script:ConfiguredHost -and $script:ConfiguredHost -notmatch '^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$') {
+    throw "host.txt no contiene un dominio valido: $($script:ConfiguredHost)"
+}
+
 function Write-Step([string]$Text) {
     Write-Host $Text -ForegroundColor Green
 }
@@ -167,6 +178,24 @@ function Backup-File([string]$Path, [string]$BackupDir, [string]$Relative) {
     }
 }
 
+function Set-IniHost([string]$Path, [string]$Host) {
+    $lines = Get-Content -LiteralPath $Path
+    $matched = $false
+    $updated = foreach ($line in $lines) {
+        if ($line -match '^(\s*host\s*=\s*).*$') {
+            $matched = $true
+            $Matches[1] + $Host
+        }
+        else {
+            $line
+        }
+    }
+    if (-not $matched) {
+        throw "No se encontro la linea host en $Path"
+    }
+    Set-Content -LiteralPath $Path -Value $updated -Encoding ASCII
+}
+
 function Install-Game([string]$Game, $Info, [string]$GameDir, [string]$Stamp) {
     $source = Join-Path $script:Root $Info.Source
     if (-not (Test-Path -LiteralPath $source -PathType Container)) { return $false }
@@ -201,6 +230,10 @@ function Install-Game([string]$Game, $Info, [string]$GameDir, [string]$Stamp) {
 
     Copy-Item -LiteralPath $netSource -Destination (Join-Path $GameDir $Info.Net) -Force
     Copy-Item -LiteralPath $iniSource -Destination (Join-Path $GameDir $Info.Ini) -Force
+    if ($script:ConfiguredHost) {
+        Set-IniHost (Join-Path $GameDir $Info.Ini) $script:ConfiguredHost
+        Write-Host "  Dominio configurado: $($script:ConfiguredHost)"
+    }
     foreach ($file in Get-ChildItem -LiteralPath $scriptsSource -File) {
         Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $scriptsTarget $file.Name) -Force
     }

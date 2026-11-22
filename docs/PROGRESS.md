@@ -438,6 +438,25 @@ Se agregó el botón **BAN/DESBANEAR** en `/admin`, junto a RESET.
 - Verificación: `systemctl status nfs-online` → unit not found;
   `docker ps` → `nfs-server` + `nfs-web`; `/healthz` → `{"ok":true}`.
 
+## Pack: el instalador fuerza el dominio (2026-11-21)
+
+El pack 0.2.22 copiaba el INI tal como venía. Si el amigo reutilizaba un
+pack viejo (por ejemplo el de la prueba LAN, con `host =
+192.0.2.37`), el cliente nunca llegaba al Debian y el servidor no
+veía ningún `auth`; el síntoma era “la cuenta existe en la web pero no
+entra al juego”.
+
+- `tools/package_clients.py` agrega `host.txt` con el host del build.
+- `packaging/client/install.ps1` lee `host.txt` y reescribe las líneas
+  `host =` de `net_u2.ini`/`net_mw.ini` después de copiarlas.
+- Tests nuevos en `tests/test_package_clients.py` (host.txt presente y
+  usado por el instalador).
+- Pack publicado: **0.2.23** (binarios de cliente 0.2.22 + instalador
+  nuevo). SHA-256 del pack completo:
+  `d422bd684b5af272e2b8d18353c5a8f0c48bf421286015892125eb0f27c64406`.
+- Verificado por HTTPS: `/api/connect` lista 0.2.23 y la descarga tiene
+  el mismo SHA-256.
+
 ## Verificación actual
 
 - Servidor:

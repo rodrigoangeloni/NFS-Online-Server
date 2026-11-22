@@ -279,6 +279,9 @@ def package_clients(
     downloads: list[dict[str, object]] = []
     with tempfile.TemporaryDirectory(prefix="nfs-client-package-") as temporary:
         stage = Path(temporary)
+        host_file = stage / "host.txt"
+        host_file.write_text(host + "\n", encoding="utf-8")
+        shared["host.txt"] = host_file
         per_game: dict[str, dict[str, Path]] = {}
         for game in selected:
             per_game[game] = _game_entries(

@@ -214,10 +214,14 @@ docker compose -f docker/compose.dev.yml up -d --build nfs-web
 - El puerto **8080** está ocupado por `sbrw-core`/NFS World; Assetto ocupa `8081-8088`; NFS usa **8096**.
 - Registro abierto en la prueba LAN (`NFS_WEB_INVITE_REQUIRED=0`). Para
   invitaciones: `python tools/create_invite.py --uses 5 --days 7`.
-- Paquetes: `python tools/package_clients.py --host 192.0.2.37 ...`; salen en
-  `E:\vscode-workspace\NFS-Online-Artifacts\downloads\` con `manifest.json`.
+- Paquetes: `python tools/package_clients.py --host nfs-fps.duckdns.org ...`;
+  salen en `E:\vscode-workspace\NFS-Online-Artifacts\downloads\` con
+  `manifest.json`.
 - El pack incluye `INSTALAR.bat`, `install.ps1`, `LEEME.txt`, `DESINSTALAR.bat`,
   licencias, loader y Widescreen Fix en `WindowedMode = 1`.
+- `host.txt` guarda el dominio del build y `install.ps1` lo fuerza en
+  `net_u2.ini`/`net_mw.ini` al instalar; un pack viejo o un INI editado
+  no deja al cliente apuntando a otro servidor.
 - Detalle: `docs/local-testing.md`.
 
 ## Producción en Debian
